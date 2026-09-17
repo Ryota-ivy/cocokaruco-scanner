@@ -42,5 +42,8 @@ jobs:
         run: |
           printf '{"scriptId":"%s","rootDir":"."}\n' "$SCRIPT_ID" > .clasp.json
 
+      - name: Verify clasp login
+        run: clasp login --status
+        
       - name: Deploy to Apps Script
         run: clasp push --force
