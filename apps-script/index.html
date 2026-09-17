@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .sub {
+      text-align: center;
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: white;
+    }
+
+    #reader {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .scan {
+      background: #111;
+      color: white;
+    }
+
+    .register {
+      background: #111;
+      color: white;
+      margin-top: 28px;
+    }
+
+    #message {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h1>cocokaruco</h1>
+  <div class="sub">商品登録 / STOCK MANAGEMENT</div>
+
+  <button class="scan" onclick="startScanner()">
+    📷 バーコードを読み取る
+  </button>
+
+  <div id="reader"></div>
+
+  <label>商品番号</label>
+  <input id="productNumber">
+
+  <label>バーコード番号</label>
+  <input id="barcode" inputmode="numeric" value="<?= barcode ?>">
+
+  <label>商品名</label>
+  <input id="productName">
+
+  <label>種類</label>
+  <input id="type">
+
+  <label>ブランド名</label>
+  <input id="brand">
+
+  <label>カラー</label>
+  <input id="color">
+
+  <label>サイズ</label>
+  <input id="size">
+
+  <label>メーカー</label>
+  <input id="maker">
+
+  <label>入荷日</label>
+  <input id="arrivalDate" type="date">
+
+  <label>仕入れ価格</label>
+  <input id="cost" type="number">
+
+  <label>販売価格</label>
+  <input id="price" type="number">
+
+  <label>在庫数</label>
+  <input id="stock" type="number" value="1">
+
+  <label>Instagram掲載</label>
+  <select id="instagram">
+    <option value="">未設定</option>
+    <option value="掲載済">掲載済</option>
+    <option value="未掲載">未掲載</option>
+  </select>
+
+  <button class="register" id="registerButton" onclick="registerProduct()">
+    商品を登録する
+  </button>
+
+  <div id="message"></div>
+
+</div>
+
+<script>
+
+let scanner = null;
+
+function startScanner() {
+
+  if (scanner) {
+    return;
+  }
+
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: { width: 300, height: 150 }
+    },
+
+    function(decodedText) {
+
+      document.getElementById("barcode").value = decodedText;
+
+      scanner.stop().then(function() {
+        scanner.clear();
+        scanner = null;
+        document.getElementById("reader").innerHTML = "";
+      });
+
+    },
+
+    function(errorMessage) {
+      // 読み取り待機中
+    }
+  ).catch(function(err) {
+    scanner = null;
+    alert("カメラを起動できませんでした。Safariのカメラ許可を確認してください。");
+  });
+}
+
+
+function registerProduct() {
+
+  const button = document.getElementById("registerButton");
+  const message = document.getElementById("message");
+
+  const data = {
+    productNumber: document.getElementById("productNumber").value,
+    barcode: document.getElementById("barcode").value,
+    productName: document.getElementById("productName").value,
+    type: document.getElementById("type").value,
+    brand: document.getElementById("brand").value,
+    color: document.getElementById("color").value,
+    size: document.getElementById("size").value,
+    maker: document.getElementById("maker").value,
+    arrivalDate: document.getElementById("arrivalDate").value,
+    cost: document.getElementById("cost").value,
+    price: document.getElementById("price").value,
+    stock: document.getElementById("stock").value,
+    instagram: document.getElementById("instagram").value
+  };
+
+  if (!data.barcode) {
+    alert("バーコード番号を入力してください");
+    return;
+  }
+
+  if (!data.productName) {
+    alert("商品名を入力してください");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "登録中...";
+  message.textContent = "";
+
+  google.script.run
+
+ .withSuccessHandler(function(result) {
+
+  message.textContent = "✅ " + result;
+
+  button.disabled = false;
+  button.textContent = "商品を登録する";
+
+  // 登録完了後、次の商品スキャン画面へ自動移動
+  setTimeout(function() {
+    window.location.href =
+      "https://ryota-ivy.github.io/cocokaruco-scanner/";
+  }, 800);
+
+})
+
+    .withFailureHandler(function(error) {
+
+      message.textContent = "❌ 登録できませんでした：" + error.message;
+
+      button.disabled = false;
+      button.textContent = "商品を登録する";
+
+    })
+
+    .registerProduct(data);
+}
+
+// 登録済みバーコードをチェック
+window.addEventListener("DOMContentLoaded", function () {
+
+  const barcodeInput = document.getElementById("barcode");
+  const barcode = barcodeInput.value.trim();
+
+  if (!barcode) return;
+
+  google.script.run
+    .withSuccessHandler(function(info) {
+
+      if (!info.found) {
+        return;
+      }
+
+     currentDuplicateBarcode = barcode;
+
+document.getElementById("duplicateInfo").innerHTML =
+  "商品名：" + info.productName + "<br>" +
+  "ブランド：" + info.brand + "<br>" +
+  "カラー：" + info.color + "<br>" +
+  "サイズ：" + info.size + "<br>" +
+  "現在庫：" + info.stock + "<br>" +
+  "登録件数：" + info.count + "件";
+
+document.getElementById("duplicateModal").style.display = "flex";
+    })
+    .withFailureHandler(function(error) {
+      console.error("バーコード確認エラー:", error);
+    })
+    .checkBarcode(barcode);
+
+});
+
+let currentDuplicateBarcode = "";
+
+function addExistingStock() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      if (result.success) {
+        alert("在庫を＋1しました！ 現在庫：" + result.newStock);
+
+        window.location.href =
+          "https://ryota-ivy.github.io/cocokaruco-scanner/";
+      } else {
+        alert("在庫更新に失敗しました");
+      }
+
+    })
+    .withFailureHandler(function(error) {
+      alert("在庫更新エラー：" + error.message);
+    })
+    .addStockByBarcode(currentDuplicateBarcode);
+}
+
+
+function continueAsNew() {
+  document.getElementById("duplicateModal").style.display = "none";
+}
+
+
+function cancelDuplicate() {
+  window.location.href =
+    "https://ryota-ivy.github.io/cocokaruco-scanner/";
+}
+
+</script>
+
+<div id="duplicateModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    width:90%;
+    max-width:420px;
+    background:white;
+    border-radius:18px;
+    padding:24px;
+    box-sizing:border-box;
+  ">
+    <h3 style="margin-top:0;">このバーコードは登録済みです</h3>
+
+    <div id="duplicateInfo" style="margin-bottom:20px; line-height:1.7;"></div>
+
+    <button onclick="addExistingStock()" style="margin-bottom:10px;">
+      在庫を＋1する
+    </button>
+
+    <button onclick="continueAsNew()" style="margin-bottom:10px;">
+      別商品として新規登録
+    </button>
+
+    <button onclick="cancelDuplicate()" style="background:#777;">
+      キャンセル
+    </button>
+  </div>
+</div>
+
+
+</body>
+</html>
