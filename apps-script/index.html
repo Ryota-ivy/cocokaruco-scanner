@@ -112,8 +112,14 @@
 
   <label>バーコード番号</label>
   <input id="barcode" inputmode="text" value="<?= barcode ?>">
+  <button type="button" id="generateBarcodeButton" onclick="generateBarcodeNow()" style="background:#fff;color:#111;border:2px solid #111;margin-top:10px;">
+    🏷️ 新しいバーコードを生成
+  </button>
+  <div id="barcodePreview" style="display:none;text-align:center;background:#fff;padding:10px;margin-top:8px;border-radius:10px;">
+    <svg id="previewBarcode" style="max-width:100%;shape-rendering:crispEdges;"></svg>
+  </div>
   <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
-    🏷️ 商品情報を入力後、登録と同時にバーコードを自動生成します。
+    商品在庫一覧と重複しない番号を発行します。
   </div>
 
   <label>商品名</label>
@@ -210,6 +216,40 @@ function startScanner() {
 }
 
 
+function generateBarcodeNow() {
+  const btn = document.getElementById("generateBarcodeButton");
+  const message = document.getElementById("message");
+  btn.disabled = true;
+  btn.textContent = "生成中...";
+  message.textContent = "";
+
+  google.script.run
+    .withSuccessHandler(function(code) {
+      document.getElementById("barcode").value = code;
+      JsBarcode("#previewBarcode", code, {
+        format: "EAN13",
+        displayValue: true,
+        height: 48,
+        width: 1.5,
+        margin: 10,
+        fontSize: 13,
+        background: "#ffffff",
+        lineColor: "#000000"
+      });
+      document.getElementById("barcodePreview").style.display = "block";
+      document.getElementById("autoBarcodeNotice").style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "🔄 別のバーコードを生成";
+      message.textContent = "✅ 未使用のバーコードを生成しました";
+    })
+    .withFailureHandler(function(error) {
+      btn.disabled = false;
+      btn.textContent = "🏷️ 新しいバーコードを生成";
+      message.textContent = "❌ バーコード生成エラー：" + error.message;
+    })
+    .generateUniqueEan13Barcode();
+}
+
 function registerProduct() {
 
   const button = document.getElementById("registerButton");
@@ -302,10 +342,8 @@ window.addEventListener("DOMContentLoaded", function () {
   const isNewBarcode = params.get("newBarcode") === "1";
 
   if (isNewBarcode && !barcodeInput.value.trim()) {
-    barcodeInput.readOnly = true;
-    barcodeInput.placeholder = "登録時に自動生成";
+    barcodeInput.placeholder = "下のボタンで自動生成できます";
     document.getElementById("autoBarcodeNotice").style.display = "block";
-    document.getElementById("registerButton").textContent = "🏷️ バーコードを生成して登録";
   }
 
   const barcode = barcodeInput.value.trim();
