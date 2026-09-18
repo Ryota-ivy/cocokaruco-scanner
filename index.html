@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>cocokaruco Barcode Scanner</title>
 
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>\n  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
     body {
@@ -75,6 +75,12 @@
       font-size: 14px;
       margin-top: 16px;
     }
+    @media print {
+      body * { visibility: hidden; }
+      #barcodeMaker, #barcodeMaker * { visibility: visible; }
+      #barcodeMaker { position:absolute; left:0; top:0; width:52mm; border:0; padding:2mm; margin:0; }
+      #barcodeMaker button { display:none; }
+    }
   </style>
 </head>
 
@@ -92,6 +98,14 @@
   <button class="no-barcode" onclick="registerWithoutBarcode()">
     🏷️ バーコードがない商品を登録
   </button>
+
+  <div id="barcodeMaker" style="display:none;text-align:center;margin-top:18px;padding:16px;border:2px dashed #111;border-radius:12px;">
+    <div style="font-weight:bold;">cocokaruco</div>
+    <svg id="newBarcodeSvg"></svg>
+    <div id="newBarcodeText" style="font-weight:bold;margin-top:4px;"></div>
+    <button onclick="continueNewProduct()">商品情報の入力へ進む</button>
+    <button class="no-barcode" onclick="printNewBarcode()">このバーコードを印刷</button>
+  </div>
 
   <div id="reader"></div>
 
@@ -113,8 +127,30 @@ const APP_URL =
 let scanner = null;
 let scanning = false;
 
+let generatedInternalBarcode = "";
+
 function registerWithoutBarcode() {
-  window.location.href = APP_URL + "?newBarcode=1";
+  // GAS本体のデプロイ状況に依存せず、端末上で衝突しにくい一意コードを生成。
+  generatedInternalBarcode = "CK" + Date.now();
+  document.getElementById("newBarcodeText").textContent = generatedInternalBarcode;
+  document.getElementById("barcodeMaker").style.display = "block";
+  JsBarcode("#newBarcodeSvg", generatedInternalBarcode, {
+    format: "CODE128",
+    displayValue: false,
+    height: 58,
+    margin: 6
+  });
+  document.getElementById("message").textContent = "✅ バーコードを発行しました";
+}
+
+function continueNewProduct() {
+  if (!generatedInternalBarcode) return;
+  window.location.href = APP_URL + "?barcode=" + encodeURIComponent(generatedInternalBarcode);
+}
+
+function printNewBarcode() {
+  if (!generatedInternalBarcode) return;
+  window.print();
 }
 
 async function startScanner() {
