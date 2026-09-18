@@ -120,14 +120,16 @@
     </div>
   </div>
 
-  <div id="registrationScreen" class="screen">
+  <div id="scannerScreen" class="screen">
     <button class="back-button" onclick="showHome()">← トップへ戻る</button>
 
-    <button onclick="startScanner()">
+    <h2 id="scannerTitle" style="text-align:center;">商品登録</h2>
+
+    <button onclick="startScanner(currentScanMode)">
       📷 バーコードを読み取る
     </button>
 
-    <button class="no-barcode" onclick="registerWithoutBarcode()">
+    <button id="noBarcodeButton" class="no-barcode" onclick="registerWithoutBarcode()">
       🏷️ バーコードがない商品を登録
     </button>
 
@@ -151,6 +153,7 @@ const APP_URL =
 
 let scanner = null;
 let scanning = false;
+let currentScanMode = "register";
 
 let generatedInternalBarcode = "";
 
@@ -159,12 +162,23 @@ function registerWithoutBarcode() {
 }
 
 function openRegistration() {
+  currentScanMode = "register";
+  document.getElementById("scannerTitle").textContent = "商品登録";
+  document.getElementById("noBarcodeButton").style.display = "block";
+  document.querySelector("#scannerScreen .hint").textContent = "読み取り後、自動で商品登録画面に進みます";
   document.getElementById("homeScreen").classList.remove("active");
-  document.getElementById("registrationScreen").classList.add("active");
+  document.getElementById("scannerScreen").classList.add("active");
 }
 
 function openSales() {
-  window.location.href = APP_URL + "?mode=sale&autostart=1";
+  currentScanMode = "sale";
+  document.getElementById("scannerTitle").textContent = "商品販売";
+  document.getElementById("noBarcodeButton").style.display = "none";
+  document.querySelector("#scannerScreen .hint").textContent = "読み取り後、商品と数量の確認画面に進みます";
+  document.getElementById("homeScreen").classList.remove("active");
+  document.getElementById("scannerScreen").classList.add("active");
+  // GitHub Pagesのトップレベル画面上で、販売タップを起点に直接カメラを開く。
+  startScanner("sale");
 }
 
 async function showHome() {
@@ -174,7 +188,7 @@ async function showHome() {
     scanner = null;
     scanning = false;
   }
-  document.getElementById("registrationScreen").classList.remove("active");
+  document.getElementById("scannerScreen").classList.remove("active");
   document.getElementById("homeScreen").classList.add("active");
 }
 
@@ -188,9 +202,11 @@ function printNewBarcode() {
   window.print();
 }
 
-async function startScanner() {
+async function startScanner(scanMode) {
 
   if (scanning) return;
+
+  currentScanMode = scanMode || currentScanMode || "register";
 
   scanning = true;
 
@@ -277,12 +293,20 @@ async function onScanSuccess(decodedText) {
     scanner.clear();
   } catch (e) {}
 
-  const destination =
-    APP_URL + "?barcode=" + encodeURIComponent(decodedText);
+  const destination = currentScanMode === "sale"
+    ? APP_URL + "?mode=sale&barcode=" + encodeURIComponent(decodedText)
+    : APP_URL + "?barcode=" + encodeURIComponent(decodedText);
 
   // 読み取り後は待たずに商品登録画面へ移動
   window.location.href = destination;
 }
+
+window.addEventListener("DOMContentLoaded", function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("mode") === "sale") {
+    openSales();
+  }
+});
 
 </script>
 

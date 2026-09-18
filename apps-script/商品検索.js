@@ -263,6 +263,7 @@ function doGet(e) {
 
   template.barcode = e.parameter.barcode || '';
   template.newBarcode = e.parameter.newBarcode || '';
+  template.saleBarcode = e.parameter.mode === 'sale' ? (e.parameter.barcode || '') : '';
 
   return template.evaluate()
     .setTitle('cocokaruco 在庫管理')

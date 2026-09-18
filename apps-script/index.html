@@ -127,6 +127,8 @@
 
 <div class="card">
 
+  <input type="hidden" id="initialSaleBarcode" value="<?= saleBarcode ?>">
+
   <h1>cocokaruco</h1>
   <div class="sub">STOCK MANAGEMENT</div>
 
@@ -147,7 +149,7 @@
     <button type="button" class="back-button" onclick="showHome()">← トップへ戻る</button>
     <div style="font-weight:700;font-size:18px;">🛒 販売モード</div>
     <div style="font-size:14px;color:#666;margin-top:5px;">バーコードを読み取り、商品と数量を確認して販売を確定します。</div>
-    <button type="button" class="scan" onclick="startScanner('saleReader', 'sale')">
+    <button type="button" class="scan" onclick="openSaleAndStart(event)">
       📷 商品バーコードを読み取る
     </button>
     <div id="saleReader"></div>
@@ -284,13 +286,9 @@ function openRegister() {
 }
 
 function openSaleAndStart(event) {
-  if (event) event.currentTarget.disabled = true;
-  currentMode = "sale";
-  showScreen("salePanel");
-  // 同じタップ処理内で getUserMedia まで進め、iPhone Safariの起動を安定させる。
-  startScanner("saleReader", "sale").finally(function() {
-    if (event) event.currentTarget.disabled = false;
-  });
+  // Apps Scriptはiframe内で動くため、iPhone Safariではカメラが拒否されることがある。
+  // カメラはトップレベルのGitHub Pagesで起動し、読取値だけをこの画面へ戻す。
+  window.top.location.href = "https://ryota-ivy.github.io/cocokaruco-scanner/?mode=sale&autostart=1";
 }
 
 function resetSaleSelection() {
@@ -683,14 +681,18 @@ window.addEventListener("DOMContentLoaded", function () {
   const isNewBarcode = params.get("newBarcode") === "1";
   const requestedMode = params.get("mode");
   const shouldAutoStart = params.get("autostart") === "1";
+  const saleBarcode = document.getElementById("initialSaleBarcode").value.trim();
 
   if (barcodeInput.value.trim() || isNewBarcode) {
     openRegister();
   } else if (requestedMode === "sale") {
     currentMode = "sale";
     showScreen("salePanel");
-    if (shouldAutoStart) {
-      requestAnimationFrame(function() { startScanner("saleReader", "sale"); });
+    if (saleBarcode) {
+      currentSaleBarcode = saleBarcode;
+      loadSaleProduct(saleBarcode);
+    } else if (shouldAutoStart) {
+      window.top.location.href = "https://ryota-ivy.github.io/cocokaruco-scanner/?mode=sale&autostart=1";
     }
   }
 
