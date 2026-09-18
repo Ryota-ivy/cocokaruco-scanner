@@ -420,3 +420,43 @@ function generateInternalEan13Barcode_() {
     lock.releaseLock();
   }
 }
+
+
+function generateUniqueEan13Barcode() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('商品在庫一覧');
+    if (!sheet) throw new Error('商品在庫一覧シートが見つかりません。');
+
+    const lastRow = sheet.getLastRow();
+    const used = new Set(
+      lastRow >= 3
+        ? sheet.getRange(3, 2, lastRow - 2, 1).getDisplayValues().flat().map(String)
+        : []
+    );
+
+    const props = PropertiesService.getScriptProperties();
+    let seq = Number(props.getProperty('INTERNAL_EAN_SEQ') || 0);
+
+    for (let attempt = 0; attempt < 100000; attempt++) {
+      seq++;
+      if (seq > 9999999999) throw new Error('自社バーコード採番上限です。');
+
+      const body12 = '20' + String(seq).padStart(10, '0');
+      let sum = 0;
+      for (let i = 0; i < 12; i++) {
+        sum += Number(body12[i]) * (i % 2 === 0 ? 1 : 3);
+      }
+      const code = body12 + String((10 - (sum % 10)) % 10);
+
+      if (!used.has(code)) {
+        props.setProperty('INTERNAL_EAN_SEQ', String(seq));
+        return code;
+      }
+    }
+    throw new Error('未使用バーコードを発行できませんでした。');
+  } finally {
+    lock.releaseLock();
+  }
+}
