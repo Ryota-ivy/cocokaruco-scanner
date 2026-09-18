@@ -4,7 +4,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>\n  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
     body {
@@ -83,6 +83,12 @@
       font-weight: bold;
       margin-top: 18px;
     }
+  @media print {
+      body * { visibility: hidden; }
+      #barcodeLabel, #barcodeLabel * { visibility: visible; }
+      #barcodeLabel { position:absolute; left:0; top:0; width:52mm; border:0; margin:0; padding:2mm; }
+      #barcodeLabel button { display:none; }
+    }
   </style>
 </head>
 
@@ -103,7 +109,7 @@
   <input id="productNumber">
 
   <label>バーコード番号</label>
-  <input id="barcode" inputmode="numeric" value="<?= barcode ?>">
+  <input id="barcode" inputmode="text" value="<?= barcode ?>">\n  <button type="button" onclick="issueInternalBarcode()" style="background:#eee;color:#111;margin-top:8px;">バーコードがない商品 → 自動発行</button>\n\n  <div id="barcodeLabel" style="display:none;text-align:center;background:#fff;border:1px dashed #bbb;padding:14px;margin-top:12px;">\n    <div style="font-weight:bold;margin-bottom:4px;">cocokaruco</div>\n    <svg id="generatedBarcode"></svg>\n    <div id="generatedBarcodeText" style="font-size:14px;font-weight:bold;"></div>\n    <button type="button" onclick="printBarcodeLabel()" style="background:#111;color:#fff;margin-top:10px;">ラベルを印刷</button>\n  </div>
 
   <label>商品名</label>
   <input id="productName">
@@ -190,6 +196,42 @@ function startScanner() {
   });
 }
 
+
+function issueInternalBarcode() {
+  const message = document.getElementById("message");
+  message.textContent = "バーコード発行中...";
+  google.script.run
+    .withSuccessHandler(function(code) {
+      document.getElementById("barcode").value = code;
+      renderBarcodeLabel(code);
+      message.textContent = "✅ " + code + " を発行しました";
+    })
+    .withFailureHandler(function(error) {
+      message.textContent = "❌ 発行できませんでした：" + error.message;
+    })
+    .generateInternalBarcode();
+}
+
+function renderBarcodeLabel(code) {
+  const label = document.getElementById("barcodeLabel");
+  label.style.display = "block";
+  document.getElementById("generatedBarcodeText").textContent = code;
+  JsBarcode("#generatedBarcode", code, {
+    format: "CODE128",
+    displayValue: false,
+    height: 54,
+    margin: 4
+  });
+}
+
+function printBarcodeLabel() {
+  const label = document.getElementById("barcodeLabel");
+  if (label.style.display === "none") {
+    alert("先にバーコードを発行してください");
+    return;
+  }
+  window.print();
+}
 
 function registerProduct() {
 
