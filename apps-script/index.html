@@ -99,7 +99,21 @@
 <div class="card">
 
   <h1>cocokaruco</h1>
-  <div class="sub">商品登録 / STOCK MANAGEMENT</div>
+  <div class="sub">STOCK MANAGEMENT</div>
+
+  <div style="display:flex;gap:10px;margin-bottom:18px;">
+    <button type="button" id="registerModeBtn" onclick="setMode('register')" style="margin-top:0;background:#111;color:#fff;">商品登録</button>
+    <button type="button" id="saleModeBtn" onclick="setMode('sale')" style="margin-top:0;background:#e5e5e5;color:#111;">販売モード</button>
+  </div>
+
+  <div id="salePanel" style="display:none;background:#f7f7f7;padding:16px;border-radius:14px;margin-bottom:18px;">
+    <div style="font-weight:700;font-size:18px;">🛒 販売モード</div>
+    <div style="font-size:14px;color:#666;margin-top:5px;">バーコードを読み取ると商品を確認して在庫を1点減らします。</div>
+    <div id="saleInfo" style="display:none;background:#fff;padding:14px;border-radius:10px;margin-top:12px;line-height:1.7;"></div>
+    <button type="button" id="sellButton" onclick="confirmSale()" style="display:none;background:#111;color:#fff;">この商品を1点販売する</button>
+  </div>
+
+  <div id="registerFields">
 
   <button class="scan" onclick="startScanner()">
     📷 バーコードを読み取る
@@ -165,6 +179,8 @@
 
   <div id="message"></div>
 
+  </div><!-- /registerFields -->
+
   <div id="generatedLabel" style="display:none;margin-top:24px;padding:16px;border:2px solid #111;border-radius:12px;background:#fff;">
     <div id="labelBrand" style="font-weight:700;font-size:18px;"></div>
     <div id="labelMeta" style="font-size:14px;line-height:1.6;margin-top:6px;"></div>
@@ -178,6 +194,22 @@
 <script>
 
 let scanner = null;
+let currentMode = "register";
+let currentSaleBarcode = "";
+
+function setMode(mode) {
+  currentMode = mode;
+  const sale = mode === "sale";
+  document.getElementById("registerFields").style.display = sale ? "none" : "block";
+  document.getElementById("salePanel").style.display = sale ? "block" : "none";
+  document.getElementById("registerModeBtn").style.background = sale ? "#e5e5e5" : "#111";
+  document.getElementById("registerModeBtn").style.color = sale ? "#111" : "#fff";
+  document.getElementById("saleModeBtn").style.background = sale ? "#111" : "#e5e5e5";
+  document.getElementById("saleModeBtn").style.color = sale ? "#fff" : "#111";
+  document.getElementById("saleInfo").style.display = "none";
+  document.getElementById("sellButton").style.display = "none";
+  currentSaleBarcode = "";
+}
 
 function startScanner() {
 
@@ -196,7 +228,12 @@ function startScanner() {
 
     function(decodedText) {
 
-      document.getElementById("barcode").value = decodedText;
+      if (currentMode === "sale") {
+        currentSaleBarcode = decodedText;
+        loadSaleProduct(decodedText);
+      } else {
+        document.getElementById("barcode").value = decodedText;
+      }
 
       scanner.stop().then(function() {
         scanner.clear();
@@ -215,6 +252,61 @@ function startScanner() {
   });
 }
 
+
+function loadSaleProduct(barcode) {
+  const info = document.getElementById("saleInfo");
+  const btn = document.getElementById("sellButton");
+  info.style.display = "block";
+  info.textContent = "商品情報を確認中...";
+  btn.style.display = "none";
+  google.script.run
+    .withSuccessHandler(function(p) {
+      if (!p.found) {
+        info.textContent = "❌ このバーコードの商品が見つかりません";
+        currentSaleBarcode = "";
+        return;
+      }
+      info.innerHTML =
+        "<strong>" + (p.brand || "") + " " + (p.productName || "") + "</strong><br>" +
+        "カラー：" + (p.color || "-") + "　サイズ：" + (p.size || "-") + "<br>" +
+        "販売価格：¥" + Number(p.price || 0).toLocaleString() + "<br>" +
+        "現在庫：<strong>" + p.stock + "</strong>";
+      if (p.stock > 0) btn.style.display = "block";
+      else info.innerHTML += "<br><strong>⚠️ 在庫0のため販売できません</strong>";
+    })
+    .withFailureHandler(function(e) { info.textContent = "❌ " + e.message; })
+    .getProductForSale(barcode);
+}
+
+function confirmSale() {
+  if (!currentSaleBarcode) return;
+  const btn = document.getElementById("sellButton");
+  btn.disabled = true;
+  btn.textContent = "処理中...";
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.textContent = "この商品を1点販売する";
+      if (!r.success) {
+        if (r.reason === "out_of_stock") alert("在庫が0のため販売できません");
+        else alert("商品が見つかりませんでした");
+        return;
+      }
+      document.getElementById("saleInfo").innerHTML =
+        "✅ <strong>販売登録しました！</strong><br>" +
+        (r.brand || "") + " " + (r.productName || "") + "<br>" +
+        "販売後在庫：<strong>" + r.newStock + "</strong>";
+      btn.style.display = "none";
+      currentSaleBarcode = "";
+      if (navigator.vibrate) navigator.vibrate(80);
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      btn.textContent = "この商品を1点販売する";
+      alert("販売処理エラー：" + e.message);
+    })
+    .sellProductByBarcode(currentSaleBarcode);
+}
 
 function generateBarcodeNow() {
   const btn = document.getElementById("generateBarcodeButton");
