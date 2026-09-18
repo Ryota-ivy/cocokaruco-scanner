@@ -81,7 +81,7 @@
       #barcodeMaker, #barcodeMaker * { visibility: visible; }
       #barcodeMaker { position:absolute; left:0; top:0; width:40mm; height:20mm; box-sizing:border-box; border:0; padding:1mm; margin:0; overflow:hidden; }
       #barcodeMaker > div:first-child { font-size:10px; line-height:1.1; }
-      #newBarcodeSvg { width:38mm !important; height:10mm !important; display:block; margin:0 auto; }
+      #newBarcodeSvg { max-width:38mm !important; height:11mm !important; display:block; margin:0 auto; }
       #newBarcodeText { font-size:9px !important; line-height:1.1; margin-top:0 !important; }
       #barcodeMaker button { display:none; }
     }
@@ -135,14 +135,19 @@ let generatedInternalBarcode = "";
 
 function registerWithoutBarcode() {
   // GAS本体のデプロイ状況に依存せず、端末上で衝突しにくい一意コードを生成。
-  generatedInternalBarcode = "CK" + Date.now();
+  const BARCODE_SEQ_KEY = "cocokaruco_internal_barcode_seq";
+  let next = parseInt(localStorage.getItem(BARCODE_SEQ_KEY) || "0", 10) + 1;
+  if (!Number.isFinite(next) || next < 1) next = 1;
+  generatedInternalBarcode = "CK" + String(next).padStart(6, "0");
+  localStorage.setItem(BARCODE_SEQ_KEY, String(next));
   document.getElementById("newBarcodeText").textContent = generatedInternalBarcode;
   document.getElementById("barcodeMaker").style.display = "block";
   JsBarcode("#newBarcodeSvg", generatedInternalBarcode, {
     format: "CODE128",
     displayValue: false,
-    height: 34,
-    margin: 6
+    height: 42,
+    width: 2,
+    margin: 10
   });
   document.getElementById("message").textContent = "✅ バーコードを発行しました";
 }
