@@ -21,9 +21,9 @@ function onOpen() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
   spreadsheet.getUi()
-    .createMenu('在庫フィルター')
-    .addItem('フィルターを設定・更新', 'setupInventoryFilters')
-    .addItem('フィルターをクリア', 'clearInventoryFilters')
+    .createMenu('商品検索・フィルター')
+    .addItem('検索欄を設定・更新', 'setupInventoryFilters')
+    .addItem('検索をクリア', 'clearInventoryFilters')
     .addToUi();
 
   const sheet = spreadsheet.getSheetByName(INVENTORY_FILTER_CONFIG.sheetName);
@@ -44,9 +44,10 @@ function onEdit(e) {
   const headers = getInventoryHeaders_(sheet);
   const editedHeader = headers[e.range.getColumn() - 1];
   const isKeyword = e.range.getColumn() === config.keywordColumn;
-  const isSupportedFilter = config.filterHeaders.includes(editedHeader);
+  const isKeptColumnFilter = e.range.getColumn() <= 8 &&
+    config.filterHeaders.includes(editedHeader);
 
-  if (!isKeyword && !isSupportedFilter) return;
+  if (!isKeyword && !isKeptColumnFilter) return;
 
   applyInventoryFilters_(sheet, headers);
 }
@@ -72,22 +73,31 @@ function setupInventoryFilters_(sheet) {
     .setNote('商品番号・バーコード・商品名などを横断検索します。空欄にすると解除されます。')
     .setBackground('#fff2cc');
 
+  // B1〜H1の検索・フィルターは残し、I1以降の追加フィルターだけ削除する。
   config.filterHeaders.forEach(function (headerName) {
     const columnIndex = headers.indexOf(headerName) + 1;
     if (!columnIndex || columnIndex === config.keywordColumn) return;
 
     const filterCell = sheet.getRange(config.filterRow, columnIndex);
-    const choices = getFilterChoices_(sheet, headerName, columnIndex, lastRow);
 
-    filterCell
-      .setDataValidation(
-        SpreadsheetApp.newDataValidation()
-          .requireValueInList(['すべて'].concat(choices), true)
-          .setAllowInvalid(false)
-          .build()
-      )
-      .setNote(headerName + 'で絞り込みます。複数の条件を組み合わせられます。')
-      .setBackground('#d9ead3');
+    if (columnIndex <= 8) {
+      const choices = getFilterChoices_(sheet, headerName, columnIndex, lastRow);
+      filterCell
+        .setDataValidation(
+          SpreadsheetApp.newDataValidation()
+            .requireValueInList(['すべて'].concat(choices), true)
+            .setAllowInvalid(false)
+            .build()
+        )
+        .setNote(headerName + 'で絞り込みます。')
+        .setBackground('#d9ead3');
+    } else {
+      filterCell
+        .clearContent()
+        .clearDataValidations()
+        .setNote(null)
+        .setBackground(null);
+    }
   });
 
   sheet.setFrozenRows(config.headerRow);
@@ -136,7 +146,7 @@ function applyInventoryFilters_(sheet, headers) {
 
   config.filterHeaders.forEach(function (headerName) {
     const columnIndex = headers.indexOf(headerName);
-    if (columnIndex < 0 || columnIndex === config.keywordColumn - 1) return;
+    if (columnIndex < 0 || columnIndex >= 8 || columnIndex === config.keywordColumn - 1) return;
 
     const value = String(filterValues[columnIndex] || '').trim();
     if (value && value !== 'すべて') {
