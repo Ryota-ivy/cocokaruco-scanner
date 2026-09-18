@@ -460,3 +460,73 @@ function generateUniqueEan13Barcode() {
     lock.releaseLock();
   }
 }
+
+
+/**
+ * 販売用：バーコードから商品情報を取得する。
+ */
+function getProductForSale(barcode) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('商品在庫一覧');
+  if (!sheet) throw new Error('「商品在庫一覧」シートが見つかりません。');
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 3) return { found: false };
+  const data = sheet.getRange(3, 1, lastRow - 2, 12).getDisplayValues();
+  const target = String(barcode || '').trim();
+  for (let i = 0; i < data.length; i++) {
+    if (String(data[i][1]).trim() === target) {
+      return {
+        found: true, row: i + 3, productNumber: data[i][0], barcode: data[i][1],
+        productName: data[i][2], type: data[i][3], brand: data[i][4],
+        color: data[i][5], size: data[i][6], maker: data[i][7],
+        price: data[i][10], stock: Number(String(data[i][11]).replace(/,/g, '')) || 0
+      };
+    }
+  }
+  return { found: false };
+}
+
+/**
+ * 1点販売し、在庫を-1して「販売履歴」に記録する。
+ * ScriptLockで二重タップ・同時販売による在庫競合を防ぐ。
+ */
+function sellProductByBarcode(barcode) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('商品在庫一覧');
+    if (!sheet) throw new Error('「商品在庫一覧」シートが見つかりません。');
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 3) return { success: false, reason: 'not_found' };
+    const barcodes = sheet.getRange(3, 2, lastRow - 2, 1).getDisplayValues();
+    for (let i = 0; i < barcodes.length; i++) {
+      if (String(barcodes[i][0]).trim() !== String(barcode || '').trim()) continue;
+      const row = i + 3;
+      const values = sheet.getRange(row, 1, 1, 12).getDisplayValues()[0];
+      const stockCell = sheet.getRange(row, 12);
+      const currentStock = Number(stockCell.getValue()) || 0;
+      if (currentStock <= 0) return { success: false, reason: 'out_of_stock', stock: 0 };
+      const newStock = currentStock - 1;
+      stockCell.setValue(newStock);
+
+      let history = ss.getSheetByName('販売履歴');
+      if (!history) {
+        history = ss.insertSheet('販売履歴');
+        history.appendRow(['販売日時','商品番号','バーコード','商品名','ブランド名','カラー','サイズ','販売価格','数量','販売後在庫']);
+        history.setFrozenRows(1);
+      }
+      history.appendRow([
+        new Date(), values[0], values[1], values[2], values[4],
+        values[5], values[6], values[10], 1, newStock
+      ]);
+      return {
+        success: true, newStock: newStock, barcode: values[1],
+        productName: values[2], brand: values[4], color: values[5],
+        size: values[6], price: values[10]
+      };
+    }
+    return { success: false, reason: 'not_found' };
+  } finally {
+    lock.releaseLock();
+  }
+}
