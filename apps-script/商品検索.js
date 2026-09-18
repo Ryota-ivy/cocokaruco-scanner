@@ -486,7 +486,7 @@ function getProductForSale(barcode) {
 }
 
 /**
- * 1点販売し、在庫を-1して「販売履歴」に記録する。
+ * 1点販売し、在庫を-1して「販売履歴」と「日別売上」に記録する。
  * ScriptLockで二重タップ・同時販売による在庫競合を防ぐ。
  */
 function sellProductByBarcode(barcode) {
@@ -507,22 +507,26 @@ function sellProductByBarcode(barcode) {
       const currentStock = Number(stockCell.getValue()) || 0;
       if (currentStock <= 0) return { success: false, reason: 'out_of_stock', stock: 0 };
       const newStock = currentStock - 1;
+      const soldAt = new Date();
+      const salePrice = Number(String(values[10] || '').replace(/[^\d.-]/g, '')) || 0;
+      const history = setupSalesHistorySheet_(ss);
+
+      // 履歴と日別集計を先に記録し、両方が成功した販売だけ在庫へ反映する。
+      history.appendRow([
+        soldAt, values[0], values[1], values[2], values[4],
+        values[5], values[6], salePrice, 1, newStock, salePrice
+      ]);
+      history.getRange(history.getLastRow(), 1).setNumberFormat('yyyy/MM/dd HH:mm');
+      history.getRange(history.getLastRow(), 8).setNumberFormat('¥#,##0');
+      history.getRange(history.getLastRow(), 11).setNumberFormat('¥#,##0');
+
+      rebuildDailySalesSummary_(ss, history);
       stockCell.setValue(newStock);
 
-      let history = ss.getSheetByName('販売履歴');
-      if (!history) {
-        history = ss.insertSheet('販売履歴');
-        history.appendRow(['販売日時','商品番号','バーコード','商品名','ブランド名','カラー','サイズ','販売価格','数量','販売後在庫']);
-        history.setFrozenRows(1);
-      }
-      history.appendRow([
-        new Date(), values[0], values[1], values[2], values[4],
-        values[5], values[6], values[10], 1, newStock
-      ]);
       return {
         success: true, newStock: newStock, barcode: values[1],
         productName: values[2], brand: values[4], color: values[5],
-        size: values[6], price: values[10]
+        size: values[6], price: salePrice
       };
     }
     return { success: false, reason: 'not_found' };
@@ -530,3 +534,76 @@ function sellProductByBarcode(barcode) {
     lock.releaseLock();
   }
 }
+
+/**
+ * 販売履歴シートを既存データを残したまま最新の列構成へ整える。
+ */
+function setupSalesHistorySheet_(ss) {
+  let sheet = ss.getSheetByName('販売履歴');
+  if (!sheet) sheet = ss.insertSheet('販売履歴');
+
+  const headers = [
+    '販売日時', '商品番号', 'バーコード', '商品名', 'ブランド名', 'カラー',
+    'サイズ', '販売価格', '数量', '販売後在庫', '売上金額'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.setFrozenRows(1);
+  sheet.getRange('A:A').setNumberFormat('yyyy/MM/dd HH:mm');
+  sheet.getRange('H:H').setNumberFormat('¥#,##0');
+  sheet.getRange('K:K').setNumberFormat('¥#,##0');
+  return sheet;
+}
+
+/**
+ * 「販売履歴」全体から日ごとの点数と売上金額を再集計する。
+ * 過去の履歴や後から修正された履歴も集計結果へ反映される。
+ */
+function rebuildDailySalesSummary_(ss, history) {
+  let sheet = ss.getSheetByName('日別売上');
+  if (!sheet) sheet = ss.insertSheet('日別売上');
+
+  const headers = ['売上日', '販売点数', '売上合計', '最終販売日時'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.setFrozenRows(1);
+
+  const timeZone = Session.getScriptTimeZone() || 'Asia/Tokyo';
+  const summary = {};
+  const historyLastRow = history.getLastRow();
+
+  if (historyLastRow >= 2) {
+    const rows = history.getRange(2, 1, historyLastRow - 1, 11).getValues();
+    rows.forEach(function(row) {
+      const soldAt = row[0];
+      if (!(soldAt instanceof Date) || isNaN(soldAt.getTime())) return;
+
+      const dateKey = Utilities.formatDate(soldAt, timeZone, 'yyyy/MM/dd');
+      const quantity = Number(row[8]) || 0;
+      const hasRecordedAmount = row[10] !== '' && row[10] !== null;
+      const amount = hasRecordedAmount
+        ? Number(row[10]) || 0
+        : (Number(row[7]) || 0) * quantity;
+
+      if (!summary[dateKey]) {
+        summary[dateKey] = { quantity: 0, amount: 0, lastSoldAt: soldAt };
+      }
+      summary[dateKey].quantity += quantity;
+      summary[dateKey].amount += amount;
+      if (soldAt > summary[dateKey].lastSoldAt) summary[dateKey].lastSoldAt = soldAt;
+    });
+  }
+
+  const existingRows = Math.max(sheet.getLastRow() - 1, 0);
+  if (existingRows) sheet.getRange(2, 1, existingRows, 4).clearContent();
+
+  const output = Object.keys(summary).sort().reverse().map(function(dateKey) {
+    const item = summary[dateKey];
+    return [dateKey, item.quantity, item.amount, item.lastSoldAt];
+  });
+
+  if (output.length) {
+    sheet.getRange(2, 1, output.length, 4).setValues(output);
+    sheet.getRange(2, 3, output.length, 1).setNumberFormat('¥#,##0');
+    sheet.getRange(2, 4, output.length, 1).setNumberFormat('yyyy/MM/dd HH:mm');
+  }
+}
+
