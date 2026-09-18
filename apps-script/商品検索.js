@@ -291,6 +291,13 @@ function registerProduct(data) {
     data.instagram || ''
   ]]);
 
+  // 新しく追加された種類・ブランド・カラー・サイズ等を
+  // フィルター候補へ即時反映する。
+  setupInventoryFilters_(sheet);
+
+  // 登録時にフィルターが掛かっている場合も、その条件を維持して再適用。
+  applyInventoryFilters_(sheet, getInventoryHeaders_(sheet));
+
   return '登録しました！';
 }
 
