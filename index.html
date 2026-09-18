@@ -55,6 +55,13 @@
       cursor: pointer;
     }
 
+    .no-barcode {
+      background: #fff;
+      color: #111;
+      border: 2px solid #111;
+      margin-top: 12px;
+    }
+
     #message {
       text-align: center;
       margin-top: 18px;
@@ -82,6 +89,10 @@
     📷 バーコードを読み取る
   </button>
 
+  <button class="no-barcode" onclick="registerWithoutBarcode()">
+    🏷️ バーコードがない商品を登録
+  </button>
+
   <div id="reader"></div>
 
   <div id="message">
@@ -101,6 +112,10 @@ const APP_URL =
 
 let scanner = null;
 let scanning = false;
+
+function registerWithoutBarcode() {
+  window.location.href = APP_URL + "?newBarcode=1";
+}
 
 async function startScanner() {
 
