@@ -366,3 +366,34 @@ function addStockByBarcode(barcode) {
 
   return { success: false };
 }
+
+
+/**
+ * 店内管理用バーコードを CK000001 形式で安全に採番する。
+ * ScriptLock により同時登録時の重複を防止する。
+ */
+function generateInternalBarcode() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('商品在庫一覧');
+    if (!sheet) throw new Error('「商品在庫一覧」シートが見つかりません。');
+
+    const lastRow = sheet.getLastRow();
+    const values = lastRow >= 3
+      ? sheet.getRange(3, 2, lastRow - 2, 1).getDisplayValues().flat()
+      : [];
+
+    let maxNumber = 0;
+    values.forEach(function(value) {
+      const match = String(value).trim().match(/^CK(\d{6})$/i);
+      if (match) maxNumber = Math.max(maxNumber, Number(match[1]));
+    });
+
+    const nextNumber = maxNumber + 1;
+    if (nextNumber > 999999) throw new Error('自社バーコードの採番上限に達しました。');
+    return 'CK' + String(nextNumber).padStart(6, '0');
+  } finally {
+    lock.releaseLock();
+  }
+}
