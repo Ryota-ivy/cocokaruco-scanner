@@ -76,6 +76,18 @@
       font-size: 14px;
       margin-top: 16px;
     }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .home-actions { display: grid; gap: 14px; }
+    .home-actions button { min-height: 104px; margin-top: 0; text-align: left; padding: 20px; }
+    .home-actions button span { display: block; font-size: 14px; font-weight: 500; margin-top: 8px; opacity: .78; }
+    .sale-button { background: #0b6bcb; }
+    .back-button { background: #fff; color: #111; border: 1px solid #ccc; margin: 0 0 16px; }
+    @media (max-width: 520px) {
+      body { padding: 12px; }
+      .container { padding: 18px; border-radius: 14px; }
+      button { min-height: 52px; }
+    }
     @media print {
       body * { visibility: hidden; }
       #barcodeMaker, #barcodeMaker * { visibility: visible; }
@@ -95,13 +107,29 @@
   <h1>cocokaruco</h1>
   <div class="sub">BARCODE SCANNER</div>
 
-  <button onclick="startScanner()">
-    📷 バーコードを読み取る
-  </button>
+  <div id="homeScreen" class="screen active">
+    <div class="home-actions">
+      <button onclick="openRegistration()">
+        📦 商品登録
+        <span>バーコードあり／なしの商品を在庫へ登録</span>
+      </button>
+      <button class="sale-button" onclick="openSales()">
+        🛒 商品販売
+        <span>カメラで商品を読み取り、数量を確認して販売</span>
+      </button>
+    </div>
+  </div>
 
-  <button class="no-barcode" onclick="registerWithoutBarcode()">
-    🏷️ バーコードがない商品を登録
-  </button>
+  <div id="registrationScreen" class="screen">
+    <button class="back-button" onclick="showHome()">← トップへ戻る</button>
+
+    <button onclick="startScanner()">
+      📷 バーコードを読み取る
+    </button>
+
+    <button class="no-barcode" onclick="registerWithoutBarcode()">
+      🏷️ バーコードがない商品を登録
+    </button>
 
   <div id="reader"></div>
 
@@ -109,8 +137,9 @@
     商品のバーコードをカメラに映してください
   </div>
 
-  <div class="hint">
-    読み取り後、自動で商品登録画面に戻ります
+    <div class="hint">
+      読み取り後、自動で商品登録画面に戻ります
+    </div>
   </div>
 
 </div>
@@ -127,6 +156,26 @@ let generatedInternalBarcode = "";
 
 function registerWithoutBarcode() {
   window.location.href = APP_URL + "?newBarcode=1";
+}
+
+function openRegistration() {
+  document.getElementById("homeScreen").classList.remove("active");
+  document.getElementById("registrationScreen").classList.add("active");
+}
+
+function openSales() {
+  window.location.href = APP_URL + "?mode=sale&autostart=1";
+}
+
+async function showHome() {
+  if (scanner) {
+    try { await scanner.stop(); } catch (error) {}
+    try { scanner.clear(); } catch (error) {}
+    scanner = null;
+    scanning = false;
+  }
+  document.getElementById("registrationScreen").classList.remove("active");
+  document.getElementById("homeScreen").classList.add("active");
 }
 
 function continueNewProduct() {

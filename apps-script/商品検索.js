@@ -265,7 +265,7 @@ function doGet(e) {
   template.newBarcode = e.parameter.newBarcode || '';
 
   return template.evaluate()
-    .setTitle('cocokaruco 商品登録')
+    .setTitle('cocokaruco 在庫管理')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -486,10 +486,10 @@ function getProductForSale(barcode) {
 }
 
 /**
- * 1点販売し、在庫を-1して「販売履歴」と「日別売上」に記録する。
+ * 指定数量を販売し、在庫を減算して「販売履歴」と「日別売上」に記録する。
  * ScriptLockで二重タップ・同時販売による在庫競合を防ぐ。
  */
-function sellProductByBarcode(barcode) {
+function sellProductByBarcode(barcode, quantity) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -506,7 +506,14 @@ function sellProductByBarcode(barcode) {
       const stockCell = sheet.getRange(row, 12);
       const currentStock = Number(stockCell.getValue()) || 0;
       if (currentStock <= 0) return { success: false, reason: 'out_of_stock', stock: 0 };
-      const newStock = currentStock - 1;
+      const saleQuantity = Math.floor(Number(quantity == null ? 1 : quantity));
+      if (!isFinite(saleQuantity) || saleQuantity < 1) {
+        return { success: false, reason: 'invalid_quantity', stock: currentStock };
+      }
+      if (saleQuantity > currentStock) {
+        return { success: false, reason: 'out_of_stock', stock: currentStock };
+      }
+      const newStock = currentStock - saleQuantity;
       const soldAt = new Date();
       const salePrice = Number(String(values[10] || '').replace(/[^\d.-]/g, '')) || 0;
       const history = setupSalesHistorySheet_(ss);
@@ -514,7 +521,7 @@ function sellProductByBarcode(barcode) {
       // 履歴と日別集計を先に記録し、両方が成功した販売だけ在庫へ反映する。
       history.appendRow([
         soldAt, values[0], values[1], values[2], values[4],
-        values[5], values[6], salePrice, 1, newStock, salePrice
+        values[5], values[6], salePrice, saleQuantity, newStock, salePrice * saleQuantity
       ]);
       history.getRange(history.getLastRow(), 1).setNumberFormat('yyyy/MM/dd HH:mm');
       history.getRange(history.getLastRow(), 8).setNumberFormat('¥#,##0');
@@ -524,7 +531,7 @@ function sellProductByBarcode(barcode) {
       stockCell.setValue(newStock);
 
       return {
-        success: true, newStock: newStock, barcode: values[1],
+        success: true, newStock: newStock, quantity: saleQuantity, barcode: values[1],
         productName: values[2], brand: values[4], color: values[5],
         size: values[6], price: salePrice
       };
