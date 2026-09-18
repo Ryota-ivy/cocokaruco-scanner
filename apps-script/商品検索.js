@@ -262,6 +262,7 @@ function doGet(e) {
   const template = HtmlService.createTemplateFromFile('index');
 
   template.barcode = e.parameter.barcode || '';
+  template.newBarcode = e.parameter.newBarcode || '';
 
   return template.evaluate()
     .setTitle('cocokaruco 商品登録')
@@ -270,6 +271,9 @@ function doGet(e) {
 
 function registerProduct(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!data.barcode && data.generateBarcode) {
+    data.barcode = generateInternalEan13Barcode_();
+  }
   const sheet = ss.getSheetByName('商品在庫一覧');
 
   const lastRow = sheet.getLastRow();
@@ -393,6 +397,25 @@ function generateInternalBarcode() {
     const nextNumber = maxNumber + 1;
     if (nextNumber > 999999) throw new Error('自社バーコードの採番上限に達しました。');
     return 'CK' + String(nextNumber).padStart(6, '0');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function generateInternalEan13Barcode_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const props = PropertiesService.getScriptProperties();
+    let seq = Number(props.getProperty('INTERNAL_EAN_SEQ') || 0) + 1;
+    if (seq > 9999999999) throw new Error('自社バーコード採番上限です。');
+    const body12 = '20' + String(seq).padStart(10, '0');
+    let sum = 0;
+    for (let i = 0; i < 12; i++) sum += Number(body12[i]) * (i % 2 === 0 ? 1 : 3);
+    const code = body12 + String((10 - (sum % 10)) % 10);
+    props.setProperty('INTERNAL_EAN_SEQ', String(seq));
+    return code;
   } finally {
     lock.releaseLock();
   }
