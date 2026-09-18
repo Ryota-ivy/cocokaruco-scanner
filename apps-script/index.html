@@ -4,7 +4,25 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/html5-qrcode"></script>\n  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode">
+function showProductLabel(result) {
+  const d = result.product || {};
+  const taxIn = Number(d.price || 0);
+  const taxOut = Math.round(taxIn / 1.1);
+  const w = window.open("", "_blank");
+  w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width"><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script><style>body{font-family:-apple-system,sans-serif;margin:0;padding:3mm}.label{width:52mm;box-sizing:border-box}.brand{font-weight:700;font-size:12px}.meta{font-size:10px;line-height:1.45}.price{font-size:13px;font-weight:700;margin-top:2mm}svg{max-width:48mm}</style></head><body><div class="label"><div class="brand">'+(d.brand||"cocokaruco")+'</div><div class="meta">品番：'+(d.productNumber||"-")+'　カラー：'+(d.color||"-")+'　サイズ：'+(d.size||"-")+'</div><svg id="bc"></svg><div class="price">税込 ¥'+taxIn.toLocaleString()+' <span style="font-size:9px;font-weight:400">（税抜 ¥'+taxOut.toLocaleString()+'）</span></div></div><script>JsBarcode("#bc","'+result.barcode+'",{format:"EAN13",displayValue:true,height:42,width:1.5,margin:10,fontSize:12});window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>');
+  w.document.close();
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("newBarcode") === "1" && !document.getElementById("barcode").value.trim()) {
+    document.getElementById("barcode").readOnly = true;
+    document.getElementById("barcode").placeholder = "商品登録時に自動発行";
+    document.getElementById("autoBarcodeNotice").style.display = "block";
+  }
+});
+</script>\n  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
     body {
@@ -109,7 +127,9 @@
   <input id="productNumber">
 
   <label>バーコード番号</label>
-  <input id="barcode" inputmode="text" value="<?= barcode ?>">\n  <button type="button" onclick="issueInternalBarcode()" style="background:#eee;color:#111;margin-top:8px;">バーコードがない商品 → 自動発行</button>\n\n  <div id="barcodeLabel" style="display:none;text-align:center;background:#fff;border:1px dashed #bbb;padding:14px;margin-top:12px;">\n    <div style="font-weight:bold;margin-bottom:4px;">cocokaruco</div>\n    <svg id="generatedBarcode"></svg>\n    <div id="generatedBarcodeText" style="font-size:14px;font-weight:bold;"></div>\n    <button type="button" onclick="printBarcodeLabel()" style="background:#111;color:#fff;margin-top:10px;">ラベルを印刷</button>\n  </div>
+  <input id="barcode" inputmode="text" value="<?= barcode ?>">\n  <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
+    バーコードは商品登録時に自動発行します。
+  </div>
 
   <label>商品名</label>
   <input id="productName">
@@ -241,6 +261,7 @@ function registerProduct() {
   const data = {
     productNumber: document.getElementById("productNumber").value,
     barcode: document.getElementById("barcode").value,
+    generateBarcode: document.getElementById("barcode").value.trim() === "",
     productName: document.getElementById("productName").value,
     type: document.getElementById("type").value,
     brand: document.getElementById("brand").value,
@@ -253,11 +274,6 @@ function registerProduct() {
     stock: document.getElementById("stock").value,
     instagram: document.getElementById("instagram").value
   };
-
-  if (!data.barcode) {
-    alert("バーコード番号を入力してください");
-    return;
-  }
 
   if (!data.productName) {
     alert("商品名を入力してください");
@@ -272,7 +288,13 @@ function registerProduct() {
 
  .withSuccessHandler(function(result) {
 
-  message.textContent = "✅ " + result;
+  message.textContent = "✅ " + (result.message || result);
+
+  if (result && result.barcode) {
+    document.getElementById("barcode").value = result.barcode;
+    showProductLabel(result);
+    return;
+  }
 
   button.disabled = false;
   button.textContent = "商品を登録する";
