@@ -79,6 +79,20 @@
       margin-top: 28px;
     }
 
+    .barcode-save {
+      background: #0b6bcb;
+      color: white;
+      margin-top: 10px;
+    }
+
+    #barcodeSaveMessage {
+      min-height: 1.4em;
+      margin-top: 8px;
+      color: #555;
+      font-size: 14px;
+      text-align: center;
+    }
+
     #message {
       text-align: center;
       font-weight: bold;
@@ -132,6 +146,10 @@
   <div id="barcodePreview" style="display:none;text-align:center;background:#fff;padding:10px;margin-top:8px;border-radius:10px;">
     <svg id="previewBarcode" style="max-width:100%;shape-rendering:crispEdges;"></svg>
   </div>
+  <button type="button" id="saveBarcodeButton" class="barcode-save" onclick="saveBarcodeImage()">
+    📱 バーコード画像を保存・共有
+  </button>
+  <div id="barcodeSaveMessage" aria-live="polite"></div>
   <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
     商品在庫一覧と重複しない番号を発行します。
   </div>
@@ -340,6 +358,96 @@ function generateBarcodeNow() {
       message.textContent = "❌ バーコード生成エラー：" + error.message;
     })
     .generateUniqueEan13Barcode();
+}
+
+function validateEan13(value) {
+  const code = String(value || "").trim();
+  if (!/^\d{13}$/.test(code)) {
+    return { valid: false, message: "バーコード番号は13桁の数字で入力してください。" };
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += Number(code[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+  const expectedCheckDigit = (10 - (sum % 10)) % 10;
+  if (Number(code[12]) !== expectedCheckDigit) {
+    return { valid: false, message: "EAN-13のチェックデジットが正しくありません。番号を確認してください。" };
+  }
+
+  return { valid: true, code: code };
+}
+
+function canvasToPngBlob(canvas) {
+  const dataUrl = canvas.toDataURL("image/png");
+  const binary = atob(dataUrl.split(",")[1]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: "image/png" });
+}
+
+async function saveBarcodeImage() {
+  const button = document.getElementById("saveBarcodeButton");
+  const status = document.getElementById("barcodeSaveMessage");
+  const validation = validateEan13(document.getElementById("barcode").value);
+
+  if (!validation.valid) {
+    status.textContent = "⚠️ " + validation.message;
+    document.getElementById("barcode").focus();
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "画像を作成中...";
+  status.textContent = "";
+
+  try {
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, validation.code, {
+      format: "EAN13",
+      displayValue: true,
+      width: 5,
+      height: 300,
+      margin: 60,
+      fontSize: 42,
+      textMargin: 16,
+      fontOptions: "bold",
+      background: "#ffffff",
+      lineColor: "#000000"
+    });
+
+    // 同期生成して、iPhone Safariの共有操作に必要なタップ状態を保つ。
+    const blob = canvasToPngBlob(canvas);
+    const fileName = "barcode-" + validation.code + ".png";
+    const file = new File([blob], fileName, { type: "image/png" });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "バーコード " + validation.code
+      });
+      status.textContent = "✅ 共有先を選択しました。";
+    } else {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      status.textContent = "✅ PNG画像を保存しました。";
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") {
+      status.textContent = "共有をキャンセルしました。";
+    } else {
+      status.textContent = "❌ 画像を保存できませんでした：" + (error.message || error);
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = "📱 バーコード画像を保存・共有";
+  }
 }
 
 function registerProduct() {
