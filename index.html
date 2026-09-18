@@ -79,7 +79,10 @@
     @media print {
       body * { visibility: hidden; }
       #barcodeMaker, #barcodeMaker * { visibility: visible; }
-      #barcodeMaker { position:absolute; left:0; top:0; width:52mm; border:0; padding:2mm; margin:0; }
+      #barcodeMaker { position:absolute; left:0; top:0; width:40mm; height:20mm; box-sizing:border-box; border:0; padding:1mm; margin:0; overflow:hidden; }
+      #barcodeMaker > div:first-child { font-size:10px; line-height:1.1; }
+      #newBarcodeSvg { width:38mm !important; height:10mm !important; display:block; margin:0 auto; }
+      #newBarcodeText { font-size:9px !important; line-height:1.1; margin-top:0 !important; }
       #barcodeMaker button { display:none; }
     }
   </style>
@@ -138,7 +141,7 @@ function registerWithoutBarcode() {
   JsBarcode("#newBarcodeSvg", generatedInternalBarcode, {
     format: "CODE128",
     displayValue: false,
-    height: 58,
+    height: 34,
     margin: 6
   });
   document.getElementById("message").textContent = "✅ バーコードを発行しました";
