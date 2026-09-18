@@ -4,25 +4,8 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/html5-qrcode">
-function showProductLabel(result) {
-  const d = result.product || {};
-  const taxIn = Number(d.price || 0);
-  const taxOut = Math.round(taxIn / 1.1);
-  const w = window.open("", "_blank");
-  w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width"><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script><style>body{font-family:-apple-system,sans-serif;margin:0;padding:3mm}.label{width:52mm;box-sizing:border-box}.brand{font-weight:700;font-size:12px}.meta{font-size:10px;line-height:1.45}.price{font-size:13px;font-weight:700;margin-top:2mm}svg{max-width:48mm}</style></head><body><div class="label"><div class="brand">'+(d.brand||"cocokaruco")+'</div><div class="meta">品番：'+(d.productNumber||"-")+'　カラー：'+(d.color||"-")+'　サイズ：'+(d.size||"-")+'</div><svg id="bc"></svg><div class="price">税込 ¥'+taxIn.toLocaleString()+' <span style="font-size:9px;font-weight:400">（税抜 ¥'+taxOut.toLocaleString()+'）</span></div></div><script>JsBarcode("#bc","'+result.barcode+'",{format:"EAN13",displayValue:true,height:42,width:1.5,margin:10,fontSize:12});window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>');
-  w.document.close();
-}
-
-window.addEventListener("DOMContentLoaded", function() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("newBarcode") === "1" && !document.getElementById("barcode").value.trim()) {
-    document.getElementById("barcode").readOnly = true;
-    document.getElementById("barcode").placeholder = "商品登録時に自動発行";
-    document.getElementById("autoBarcodeNotice").style.display = "block";
-  }
-});
-</script>\n  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
     body {
@@ -103,9 +86,10 @@ window.addEventListener("DOMContentLoaded", function() {
     }
   @media print {
       body * { visibility: hidden; }
-      #barcodeLabel, #barcodeLabel * { visibility: visible; }
-      #barcodeLabel { position:absolute; left:0; top:0; width:52mm; border:0; margin:0; padding:2mm; }
-      #barcodeLabel button { display:none; }
+      #generatedLabel, #generatedLabel * { visibility: visible; }
+      #generatedLabel { display:block !important; position:absolute; left:0; top:0; width:52mm; border:0 !important; margin:0; padding:2mm; box-sizing:border-box; }
+      #generatedLabel button { display:none; }
+      #labelBarcode { shape-rendering: crispEdges; max-width:48mm !important; }
     }
   </style>
 </head>
@@ -127,8 +111,9 @@ window.addEventListener("DOMContentLoaded", function() {
   <input id="productNumber">
 
   <label>バーコード番号</label>
-  <input id="barcode" inputmode="text" value="<?= barcode ?>">\n  <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
-    バーコードは商品登録時に自動発行します。
+  <input id="barcode" inputmode="text" value="<?= barcode ?>">
+  <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
+    🏷️ 商品情報を入力後、登録と同時にバーコードを自動生成します。
   </div>
 
   <label>商品名</label>
@@ -174,6 +159,14 @@ window.addEventListener("DOMContentLoaded", function() {
 
   <div id="message"></div>
 
+  <div id="generatedLabel" style="display:none;margin-top:24px;padding:16px;border:2px solid #111;border-radius:12px;background:#fff;">
+    <div id="labelBrand" style="font-weight:700;font-size:18px;"></div>
+    <div id="labelMeta" style="font-size:14px;line-height:1.6;margin-top:6px;"></div>
+    <svg id="labelBarcode" style="display:block;max-width:100%;margin:8px auto;"></svg>
+    <div id="labelPrice" style="font-weight:700;font-size:18px;margin-top:6px;"></div>
+    <button type="button" onclick="window.print()">🖨️ ラベルを印刷</button>
+  </div>
+
 </div>
 
 <script>
@@ -217,42 +210,6 @@ function startScanner() {
 }
 
 
-function issueInternalBarcode() {
-  const message = document.getElementById("message");
-  message.textContent = "バーコード発行中...";
-  google.script.run
-    .withSuccessHandler(function(code) {
-      document.getElementById("barcode").value = code;
-      renderBarcodeLabel(code);
-      message.textContent = "✅ " + code + " を発行しました";
-    })
-    .withFailureHandler(function(error) {
-      message.textContent = "❌ 発行できませんでした：" + error.message;
-    })
-    .generateInternalBarcode();
-}
-
-function renderBarcodeLabel(code) {
-  const label = document.getElementById("barcodeLabel");
-  label.style.display = "block";
-  document.getElementById("generatedBarcodeText").textContent = code;
-  JsBarcode("#generatedBarcode", code, {
-    format: "CODE128",
-    displayValue: false,
-    height: 54,
-    margin: 4
-  });
-}
-
-function printBarcodeLabel() {
-  const label = document.getElementById("barcodeLabel");
-  if (label.style.display === "none") {
-    alert("先にバーコードを発行してください");
-    return;
-  }
-  window.print();
-}
-
 function registerProduct() {
 
   const button = document.getElementById("registerButton");
@@ -289,15 +246,14 @@ function registerProduct() {
  .withSuccessHandler(function(result) {
 
   message.textContent = "✅ " + (result.message || result);
+  button.disabled = false;
+  button.textContent = "商品を登録する";
 
   if (result && result.barcode) {
     document.getElementById("barcode").value = result.barcode;
     showProductLabel(result);
     return;
   }
-
-  button.disabled = false;
-  button.textContent = "商品を登録する";
 
   // 登録完了後、次の商品スキャン画面へ自動移動
   setTimeout(function() {
@@ -319,12 +275,40 @@ function registerProduct() {
     .registerProduct(data);
 }
 
+function showProductLabel(result) {
+  const d = result.product || {};
+  const taxIn = Number(d.price || 0);
+  const taxOut = Math.round(taxIn / 1.1);
+  document.getElementById("labelBrand").textContent = d.brand || "cocokaruco";
+  document.getElementById("labelMeta").textContent =
+    "品番：" + (d.productNumber || "-") +
+    "　カラー：" + (d.color || "-") +
+    "　サイズ：" + (d.size || "-");
+  document.getElementById("labelPrice").textContent =
+    "税込 ¥" + taxIn.toLocaleString() + "（税抜 ¥" + taxOut.toLocaleString() + "）";
+  JsBarcode("#labelBarcode", result.barcode, {
+    format: "EAN13", displayValue: true, height: 48, width: 1.5,
+    margin: 10, fontSize: 13, background: "#ffffff", lineColor: "#000000"
+  });
+  document.getElementById("generatedLabel").style.display = "block";
+  document.getElementById("generatedLabel").scrollIntoView({behavior:"smooth"});
+}
+
 // 登録済みバーコードをチェック
 window.addEventListener("DOMContentLoaded", function () {
 
   const barcodeInput = document.getElementById("barcode");
-  const barcode = barcodeInput.value.trim();
+  const params = new URLSearchParams(window.location.search);
+  const isNewBarcode = params.get("newBarcode") === "1";
 
+  if (isNewBarcode && !barcodeInput.value.trim()) {
+    barcodeInput.readOnly = true;
+    barcodeInput.placeholder = "登録時に自動生成";
+    document.getElementById("autoBarcodeNotice").style.display = "block";
+    document.getElementById("registerButton").textContent = "🏷️ バーコードを生成して登録";
+  }
+
+  const barcode = barcodeInput.value.trim();
   if (!barcode) return;
 
   google.script.run
