@@ -52,7 +52,7 @@
       background: white;
     }
 
-    #reader {
+    #reader, #saleReader {
       width: 100%;
       margin-top: 15px;
     }
@@ -216,6 +216,7 @@
 <script>
 
 let scanner = null;
+let scannerStarting = false;
 let currentMode = "register";
 let currentSaleBarcode = "";
 
@@ -233,47 +234,78 @@ function setMode(mode) {
   currentSaleBarcode = "";
 }
 
-function startScanner(readerId, scanMode) {
-
-  if (scanner) {
-    return;
-  }
+async function startScanner(readerId, scanMode) {
+  if (scanner || scannerStarting) return;
 
   const targetReaderId = readerId || "reader";
   const targetMode = scanMode || currentMode;
-  scanner = new Html5Qrcode(targetReaderId);
+  const reader = document.getElementById(targetReaderId);
+  if (!reader) {
+    alert("カメラ表示エリアが見つかりませんでした。ページを再読み込みしてください。");
+    return;
+  }
 
-  scanner.start(
-    { facingMode: "environment" },
-    {
-      fps: 10,
-      qrbox: { width: 300, height: 150 }
-    },
+  // 販売モードは内側に余白があり、固定300pxの読み取り枠だと
+  // iPhoneで表示領域を超えて起動に失敗するため、実際の横幅に合わせる。
+  const availableWidth = reader.clientWidth || reader.parentElement.clientWidth || window.innerWidth;
+  const qrWidth = Math.max(180, Math.min(280, Math.floor(availableWidth * 0.82)));
+  const qrHeight = Math.max(100, Math.floor(qrWidth * 0.5));
+  let scanHandled = false;
 
-    function(decodedText) {
+  scannerStarting = true;
+  reader.innerHTML = "";
 
-      if (targetMode === "sale") {
-        currentSaleBarcode = decodedText;
-        loadSaleProduct(decodedText);
-      } else {
-        document.getElementById("barcode").value = decodedText;
+  try {
+    const activeScanner = new Html5Qrcode(targetReaderId);
+    scanner = activeScanner;
+
+    await activeScanner.start(
+      { facingMode: { ideal: "environment" } },
+      {
+        fps: 15,
+        qrbox: { width: qrWidth, height: qrHeight }
+      },
+      async function(decodedText) {
+        if (scanHandled) return;
+        scanHandled = true;
+
+        try {
+          await activeScanner.stop();
+        } catch (stopError) {
+          console.warn("カメラ停止エラー:", stopError);
+        }
+
+        try {
+          activeScanner.clear();
+        } catch (clearError) {
+          console.warn("カメラ表示のクリアエラー:", clearError);
+        }
+
+        if (scanner === activeScanner) scanner = null;
+        reader.innerHTML = "";
+
+        if (targetMode === "sale") {
+          currentSaleBarcode = decodedText;
+          loadSaleProduct(decodedText);
+        } else {
+          document.getElementById("barcode").value = decodedText;
+        }
+      },
+      function() {
+        // 読み取り待機中
       }
-
-      scanner.stop().then(function() {
-        scanner.clear();
-        scanner = null;
-        document.getElementById(targetReaderId).innerHTML = "";
-      });
-
-    },
-
-    function(errorMessage) {
-      // 読み取り待機中
+    );
+  } catch (err) {
+    console.error("カメラ起動エラー:", err);
+    if (scanner) {
+      try { scanner.clear(); } catch (clearError) {}
     }
-  ).catch(function(err) {
     scanner = null;
-    alert("カメラを起動できませんでした。Safariのカメラ許可を確認してください。");
-  });
+    reader.innerHTML = "";
+    alert("カメラを起動できませんでした。ページを再読み込みして、もう一度お試しください。");
+  } finally {
+    scannerStarting = false;
+  }
 }
 
 
