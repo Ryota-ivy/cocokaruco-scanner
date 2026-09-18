@@ -123,13 +123,17 @@
   <div id="salePanel" style="display:none;background:#f7f7f7;padding:16px;border-radius:14px;margin-bottom:18px;">
     <div style="font-weight:700;font-size:18px;">🛒 販売モード</div>
     <div style="font-size:14px;color:#666;margin-top:5px;">バーコードを読み取ると商品を確認して在庫を1点減らします。</div>
+    <button type="button" class="scan" onclick="startScanner('saleReader', 'sale')">
+      📷 商品バーコードを読み取る
+    </button>
+    <div id="saleReader"></div>
     <div id="saleInfo" style="display:none;background:#fff;padding:14px;border-radius:10px;margin-top:12px;line-height:1.7;"></div>
     <button type="button" id="sellButton" onclick="confirmSale()" style="display:none;background:#111;color:#fff;">この商品を1点販売する</button>
   </div>
 
   <div id="registerFields">
 
-  <button class="scan" onclick="startScanner()">
+  <button type="button" class="scan" onclick="startScanner('reader', 'register')">
     📷 バーコードを読み取る
   </button>
 
@@ -229,13 +233,15 @@ function setMode(mode) {
   currentSaleBarcode = "";
 }
 
-function startScanner() {
+function startScanner(readerId, scanMode) {
 
   if (scanner) {
     return;
   }
 
-  scanner = new Html5Qrcode("reader");
+  const targetReaderId = readerId || "reader";
+  const targetMode = scanMode || currentMode;
+  scanner = new Html5Qrcode(targetReaderId);
 
   scanner.start(
     { facingMode: "environment" },
@@ -246,7 +252,7 @@ function startScanner() {
 
     function(decodedText) {
 
-      if (currentMode === "sale") {
+      if (targetMode === "sale") {
         currentSaleBarcode = decodedText;
         loadSaleProduct(decodedText);
       } else {
@@ -256,7 +262,7 @@ function startScanner() {
       scanner.stop().then(function() {
         scanner.clear();
         scanner = null;
-        document.getElementById("reader").innerHTML = "";
+        document.getElementById(targetReaderId).innerHTML = "";
       });
 
     },
