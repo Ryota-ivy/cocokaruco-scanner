@@ -305,6 +305,8 @@ window.addEventListener("DOMContentLoaded", function() {
   const params = new URLSearchParams(window.location.search);
   if (params.get("mode") === "sale") {
     openSales();
+  } else if (params.get("mode") === "register") {
+    openRegistration();
   }
 });
 
