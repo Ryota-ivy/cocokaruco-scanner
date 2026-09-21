@@ -167,7 +167,7 @@
 
   <div id="registerFields" class="screen">
 
-  <button type="button" class="back-button" onclick="showHome()">← トップへ戻る</button>
+  <button type="button" class="back-button" onclick="showRegistrationMethods()">← 登録方法へ戻る</button>
 
   <button type="button" class="scan" onclick="startScanner('reader', 'register')">
     📷 バーコードを読み取る
@@ -257,6 +257,9 @@ let currentMode = "home";
 let currentSaleBarcode = "";
 let currentSaleStock = 0;
 
+const SCANNER_HOME_URL = "https://ryota-ivy.github.io/cocokaruco-scanner/";
+const REGISTRATION_METHOD_URL = SCANNER_HOME_URL + "?mode=register";
+
 function showScreen(screenId) {
   document.querySelectorAll(".screen").forEach(function(screen) {
     screen.classList.toggle("active", screen.id === screenId);
@@ -275,9 +278,14 @@ async function stopScanner() {
 function showHome() {
   stopScanner();
   currentMode = "home";
-  showScreen("homeScreen");
   resetSaleSelection();
   document.getElementById("generatedLabel").style.display = "none";
+  window.top.location.href = SCANNER_HOME_URL;
+}
+
+function showRegistrationMethods() {
+  stopScanner();
+  window.top.location.href = REGISTRATION_METHOD_URL;
 }
 
 function openRegister() {
@@ -694,6 +702,11 @@ window.addEventListener("DOMContentLoaded", function () {
     } else if (shouldAutoStart) {
       window.top.location.href = "https://ryota-ivy.github.io/cocokaruco-scanner/?mode=sale&autostart=1";
     }
+  } else {
+    // Apps Script側に重複した「商品登録 / 商品販売」メニューを出さず、
+    // 操作の起点はGitHub Pagesのトップ画面に一本化する。
+    window.top.location.href = SCANNER_HOME_URL;
+    return;
   }
 
   if (isNewBarcode && !barcodeInput.value.trim()) {
