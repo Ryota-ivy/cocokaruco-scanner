@@ -51,6 +51,30 @@ jobs:
 
       - name: Verify clasp login
         run: clasp login --status
-        
-      - name: Deploy to Apps Script
+
+      - name: Push code to Apps Script
         run: clasp push --force
+
+      - name: Create Apps Script version
+        id: version
+        shell: bash
+        run: |
+          OUTPUT="$(clasp version "GitHub ${GITHUB_SHA}")"
+          echo "$OUTPUT"
+          VERSION="$(printf '%s\n' "$OUTPUT" | grep -Eo '[0-9]+' | tail -1)"
+          test -n "$VERSION" || { echo "Could not determine Apps Script version"; exit 1; }
+          echo "number=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update existing web app deployment
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.number }}
+        run: |
+          DEPLOYMENT_ID="$(clasp deployments | awk '/@HEAD/ {next} /AKfy/ {print $2; exit}')"
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "No existing web app deployment found; creating one."
+            clasp deploy --versionNumber "$VERSION" --description "GitHub ${GITHUB_SHA}"
+          else
+            echo "Updating deployment $DEPLOYMENT_ID to version $VERSION"
+            clasp deploy --deploymentId "$DEPLOYMENT_ID" --versionNumber "$VERSION" --description "GitHub ${GITHUB_SHA}"
+          fi
