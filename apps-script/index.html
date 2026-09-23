@@ -6,813 +6,157 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #f5f5f5;
-      color: #111;
-    }
-
-    .card {
-      background: white;
-      padding: 25px;
-      border-radius: 18px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.08);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 5px;
-    }
-
-    .sub {
-      text-align: center;
-      color: #777;
-      margin-bottom: 25px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-top: 16px;
-      margin-bottom: 6px;
-    }
-
-    input, select {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 14px;
-      font-size: 17px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background: white;
-    }
-
-    #reader, #saleReader {
-      width: 100%;
-      margin-top: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 16px;
-      margin-top: 18px;
-      border: 0;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .scan {
-      background: #111;
-      color: white;
-    }
-
-    .register {
-      background: #111;
-      color: white;
-      margin-top: 28px;
-    }
-
-    .barcode-save {
-      background: #0b6bcb;
-      color: white;
-      margin-top: 10px;
-    }
-
-    #barcodeSaveMessage {
-      min-height: 1.4em;
-      margin-top: 8px;
-      color: #555;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    #message {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 18px;
-    }
-    .screen { display: none; }
-    .screen.active { display: block; }
-    .home-actions { display: grid; gap: 14px; }
-    .home-button { min-height: 104px; margin-top: 0; text-align: left; padding: 20px; }
-    .home-button span { display: block; font-size: 14px; font-weight: 500; margin-top: 8px; opacity: .78; }
-    .home-button.sale { background: #0b6bcb; color: #fff; }
-    .back-button { background: transparent; color: #333; border: 1px solid #ccc; margin-top: 0; margin-bottom: 16px; }
-    .quantity-row { display: grid; grid-template-columns: 48px 1fr 48px; gap: 10px; align-items: center; margin-top: 14px; }
-    .quantity-row button { margin: 0; padding: 12px 0; }
-    .quantity-row input { text-align: center; }
-    @media (max-width: 520px) {
-      body { padding: 12px; }
-      .card { padding: 18px; border-radius: 14px; }
-      button { min-height: 52px; }
-    }
-  @media print {
-      body * { visibility: hidden; }
-      #generatedLabel, #generatedLabel * { visibility: visible; }
-      #generatedLabel { display:block !important; position:absolute; left:0; top:0; width:52mm; border:0 !important; margin:0; padding:2mm; box-sizing:border-box; }
-      #generatedLabel button { display:none; }
-      #labelBarcode { shape-rendering: crispEdges; max-width:48mm !important; }
-    }
+    body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#f5f5f5;color:#111}
+    .card{background:white;padding:25px;border-radius:18px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+    h1{text-align:center;margin-bottom:5px}.sub{text-align:center;color:#777;margin-bottom:25px}
+    label{display:block;font-weight:bold;margin-top:16px;margin-bottom:6px}
+    input,select{box-sizing:border-box;width:100%;padding:14px;font-size:17px;border:1px solid #ccc;border-radius:10px;background:white}
+    #reader,#saleReader{width:100%;margin-top:15px}
+    button{width:100%;padding:16px;margin-top:18px;border:0;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer}
+    .scan,.register{background:#111;color:white}.register{margin-top:28px}.barcode-save{background:#0b6bcb;color:white;margin-top:10px}
+    #barcodeSaveMessage{min-height:1.4em;margin-top:8px;color:#555;font-size:14px;text-align:center}
+    #message{text-align:center;font-weight:bold;margin-top:18px}
+    .screen{display:none}.screen.active{display:block}.home-actions{display:grid;gap:14px}.home-button{min-height:104px;margin-top:0;text-align:left;padding:20px}.home-button span{display:block;font-size:14px;font-weight:500;margin-top:8px;opacity:.78}.home-button.sale{background:#0b6bcb;color:#fff}
+    .back-button{background:transparent;color:#333;border:1px solid #ccc;margin-top:0;margin-bottom:16px}.quantity-row{display:grid;grid-template-columns:48px 1fr 48px;gap:10px;align-items:center;margin-top:14px}.quantity-row button{margin:0;padding:12px 0}.quantity-row input{text-align:center}
+    .barcode-section{margin-top:26px;padding:18px;background:#f7f7f7;border-radius:14px;border:1px solid #e5e5e5}.barcode-section h3{margin:0 0 4px;font-size:18px}.barcode-section .hint{font-size:14px;color:#666;line-height:1.5;margin-bottom:10px}
+    #barcodePreview{display:none;background:#fff;padding:14px;margin-top:12px;border-radius:10px;text-align:left}.preview-meta{font-size:15px;line-height:1.65;font-weight:600;margin-bottom:8px}.preview-meta span{display:block}#previewBarcode{display:block;max-width:100%;margin:0 auto;shape-rendering:crispEdges}
+    @media(max-width:520px){body{padding:12px}.card{padding:18px;border-radius:14px}button{min-height:52px}}
+    @media print{body *{visibility:hidden}#generatedLabel,#generatedLabel *{visibility:visible}#generatedLabel{display:block!important;position:absolute;left:0;top:0;width:52mm;border:0!important;margin:0;padding:2mm;box-sizing:border-box}#generatedLabel button{display:none}#labelBarcode{shape-rendering:crispEdges;max-width:48mm!important}}
   </style>
 </head>
-
 <body>
-
 <div class="card">
-
   <input type="hidden" id="initialSaleBarcode" value="<?= saleBarcode ?>">
+  <h1>cocokaruco</h1><div class="sub">STOCK MANAGEMENT</div>
 
-  <h1>cocokaruco</h1>
-  <div class="sub">STOCK MANAGEMENT</div>
-
-  <div id="homeScreen" class="screen active">
-    <div class="home-actions">
-      <button type="button" class="home-button" onclick="openRegister()">
-        📦 商品登録
-        <span>バーコードあり／なしの商品を在庫へ登録</span>
-      </button>
-      <button type="button" class="home-button sale" onclick="openSaleAndStart(event)">
-        🛒 商品販売
-        <span>カメラで読み取り、数量を確認して在庫を減算</span>
-      </button>
-    </div>
-  </div>
+  <div id="homeScreen" class="screen active"><div class="home-actions">
+    <button type="button" class="home-button" onclick="openRegister()">📦 商品登録<span>バーコードあり／なしの商品を在庫へ登録</span></button>
+    <button type="button" class="home-button sale" onclick="openSaleAndStart(event)">🛒 商品販売<span>カメラで読み取り、数量を確認して在庫を減算</span></button>
+  </div></div>
 
   <div id="salePanel" class="screen" style="background:#f7f7f7;padding:16px;border-radius:14px;margin-bottom:18px;">
     <button type="button" class="back-button" onclick="showHome()">← トップへ戻る</button>
-    <div style="font-weight:700;font-size:18px;">🛒 販売モード</div>
-    <div style="font-size:14px;color:#666;margin-top:5px;">バーコードを読み取り、商品と数量を確認して販売を確定します。</div>
-    <button type="button" class="scan" onclick="openSaleAndStart(event)">
-      📷 商品バーコードを読み取る
-    </button>
-    <div id="saleReader"></div>
+    <div style="font-weight:700;font-size:18px;">🛒 販売モード</div><div style="font-size:14px;color:#666;margin-top:5px;">バーコードを読み取り、商品と数量を確認して販売を確定します。</div>
+    <button type="button" class="scan" onclick="openSaleAndStart(event)">📷 商品バーコードを読み取る</button><div id="saleReader"></div>
     <div id="saleInfo" style="display:none;background:#fff;padding:14px;border-radius:10px;margin-top:12px;line-height:1.7;"></div>
-    <div id="saleQuantityPanel" style="display:none;">
-      <label for="saleQuantity">販売数量</label>
-      <div class="quantity-row">
-        <button type="button" onclick="changeSaleQuantity(-1)" aria-label="数量を1減らす">−</button>
-        <input id="saleQuantity" type="number" inputmode="numeric" min="1" value="1" onchange="normalizeSaleQuantity()">
-        <button type="button" onclick="changeSaleQuantity(1)" aria-label="数量を1増やす">＋</button>
-      </div>
-    </div>
+    <div id="saleQuantityPanel" style="display:none;"><label for="saleQuantity">販売数量</label><div class="quantity-row"><button type="button" onclick="changeSaleQuantity(-1)" aria-label="数量を1減らす">−</button><input id="saleQuantity" type="number" inputmode="numeric" min="1" value="1" onchange="normalizeSaleQuantity()"><button type="button" onclick="changeSaleQuantity(1)" aria-label="数量を1増やす">＋</button></div></div>
     <button type="button" id="sellButton" onclick="confirmSale()" style="display:none;background:#111;color:#fff;">販売を確定する</button>
   </div>
 
   <div id="registerFields" class="screen">
+    <button type="button" class="back-button" onclick="showRegistrationMethods()">← 登録方法へ戻る</button>
+    <button type="button" class="scan" onclick="startScanner('reader','register')">📷 バーコードを読み取る</button><div id="reader"></div>
 
-  <button type="button" class="back-button" onclick="showRegistrationMethods()">← 登録方法へ戻る</button>
+    <label>商品番号</label><input id="productNumber">
+    <label>商品名</label><input id="productName">
+    <label>種類</label><input id="type">
+    <label>ブランド名</label><input id="brand">
+    <label>カラー</label><input id="color">
+    <label>サイズ</label><input id="size">
+    <label>メーカー</label><input id="maker">
+    <label>入荷日</label><input id="arrivalDate" type="date">
+    <label>仕入れ価格</label><input id="cost" type="number">
+    <label>販売価格</label><input id="price" type="number">
+    <label>在庫数</label><input id="stock" type="number" value="1">
+    <label>Instagram掲載</label><select id="instagram"><option value="">未設定</option><option value="掲載済">掲載済</option><option value="未掲載">未掲載</option></select>
 
-  <button type="button" class="scan" onclick="startScanner('reader', 'register')">
-    📷 バーコードを読み取る
-  </button>
+    <div class="barcode-section">
+      <h3>🏷️ バーコード作成</h3>
+      <div class="hint">商品情報を入力したあとに生成します。ラベル画像には「品番・サイズ・カラー」を一緒に入れます。</div>
+      <label>バーコード番号</label><input id="barcode" inputmode="text" value="<?= barcode ?>">
+      <button type="button" id="generateBarcodeButton" onclick="generateBarcodeNow()" style="background:#fff;color:#111;border:2px solid #111;margin-top:10px;">🏷️ 商品情報からバーコードを生成</button>
+      <div id="barcodePreview">
+        <div class="preview-meta"><span id="previewProductNumber"></span><span id="previewSize"></span><span id="previewColor"></span></div>
+        <svg id="previewBarcode"></svg>
+      </div>
+      <button type="button" id="saveBarcodeButton" class="barcode-save" onclick="saveBarcodeImage()">📱 ラベル画像を保存・共有</button>
+      <div id="barcodeSaveMessage" aria-live="polite"></div>
+      <div id="autoBarcodeNotice" style="display:none;background:#fff;padding:12px;border-radius:10px;margin-top:8px;">商品在庫一覧と重複しない番号を発行します。</div>
+    </div>
 
-  <div id="reader"></div>
-
-  <label>商品番号</label>
-  <input id="productNumber">
-
-  <label>バーコード番号</label>
-  <input id="barcode" inputmode="text" value="<?= barcode ?>">
-  <button type="button" id="generateBarcodeButton" onclick="generateBarcodeNow()" style="background:#fff;color:#111;border:2px solid #111;margin-top:10px;">
-    🏷️ 新しいバーコードを生成
-  </button>
-  <div id="barcodePreview" style="display:none;text-align:center;background:#fff;padding:10px;margin-top:8px;border-radius:10px;">
-    <svg id="previewBarcode" style="max-width:100%;shape-rendering:crispEdges;"></svg>
+    <button class="register" id="registerButton" onclick="registerProduct()">商品を登録する</button><div id="message"></div>
   </div>
-  <button type="button" id="saveBarcodeButton" class="barcode-save" onclick="saveBarcodeImage()">
-    📱 バーコード画像を保存・共有
-  </button>
-  <div id="barcodeSaveMessage" aria-live="polite"></div>
-  <div id="autoBarcodeNotice" style="display:none;background:#f7f7f7;padding:12px;border-radius:10px;margin-top:8px;">
-    商品在庫一覧と重複しない番号を発行します。
-  </div>
-
-  <label>商品名</label>
-  <input id="productName">
-
-  <label>種類</label>
-  <input id="type">
-
-  <label>ブランド名</label>
-  <input id="brand">
-
-  <label>カラー</label>
-  <input id="color">
-
-  <label>サイズ</label>
-  <input id="size">
-
-  <label>メーカー</label>
-  <input id="maker">
-
-  <label>入荷日</label>
-  <input id="arrivalDate" type="date">
-
-  <label>仕入れ価格</label>
-  <input id="cost" type="number">
-
-  <label>販売価格</label>
-  <input id="price" type="number">
-
-  <label>在庫数</label>
-  <input id="stock" type="number" value="1">
-
-  <label>Instagram掲載</label>
-  <select id="instagram">
-    <option value="">未設定</option>
-    <option value="掲載済">掲載済</option>
-    <option value="未掲載">未掲載</option>
-  </select>
-
-  <button class="register" id="registerButton" onclick="registerProduct()">
-    商品を登録する
-  </button>
-
-  <div id="message"></div>
-
-  </div><!-- /registerFields -->
 
   <div id="generatedLabel" style="display:none;margin-top:24px;padding:16px;border:2px solid #111;border-radius:12px;background:#fff;">
-    <div id="labelBrand" style="font-weight:700;font-size:18px;"></div>
-    <div id="labelMeta" style="font-size:14px;line-height:1.6;margin-top:6px;"></div>
-    <svg id="labelBarcode" style="display:block;max-width:100%;margin:8px auto;"></svg>
-    <div id="labelPrice" style="font-weight:700;font-size:18px;margin-top:6px;"></div>
-    <button type="button" onclick="window.print()">🖨️ ラベルを印刷</button>
+    <div id="labelBrand" style="font-weight:700;font-size:18px;"></div><div id="labelMeta" style="font-size:14px;line-height:1.6;margin-top:6px;"></div>
+    <svg id="labelBarcode" style="display:block;max-width:100%;margin:8px auto;"></svg><div id="labelPrice" style="font-weight:700;font-size:18px;margin-top:6px;"></div><button type="button" onclick="window.print()">🖨️ ラベルを印刷</button>
   </div>
-
 </div>
 
 <script>
+let scanner=null,scannerStarting=false,currentMode="home",currentSaleBarcode="",currentSaleStock=0;
+const SCANNER_HOME_URL="https://ryota-ivy.github.io/cocokaruco-scanner/";
+const REGISTRATION_METHOD_URL=SCANNER_HOME_URL+"?mode=register";
+function showScreen(screenId){document.querySelectorAll(".screen").forEach(function(screen){screen.classList.toggle("active",screen.id===screenId)})}
+async function stopScanner(){const activeScanner=scanner;scanner=null;scannerStarting=false;if(!activeScanner)return;try{await activeScanner.stop()}catch(error){}try{activeScanner.clear()}catch(error){}}
+function showHome(){stopScanner();currentMode="home";resetSaleSelection();document.getElementById("generatedLabel").style.display="none";window.top.location.href=SCANNER_HOME_URL}
+function showRegistrationMethods(){stopScanner();window.top.location.href=REGISTRATION_METHOD_URL}
+function openRegister(){currentMode="register";showScreen("registerFields")}
+function openSaleAndStart(event){window.top.location.href=SCANNER_HOME_URL+"?mode=sale&autostart=1"}
+function resetSaleSelection(){document.getElementById("saleInfo").style.display="none";document.getElementById("saleQuantityPanel").style.display="none";document.getElementById("sellButton").style.display="none";currentSaleBarcode="";currentSaleStock=0;document.getElementById("saleQuantity").value=1}
 
-let scanner = null;
-let scannerStarting = false;
-let currentMode = "home";
-let currentSaleBarcode = "";
-let currentSaleStock = 0;
-
-const SCANNER_HOME_URL = "https://ryota-ivy.github.io/cocokaruco-scanner/";
-const REGISTRATION_METHOD_URL = SCANNER_HOME_URL + "?mode=register";
-
-function showScreen(screenId) {
-  document.querySelectorAll(".screen").forEach(function(screen) {
-    screen.classList.toggle("active", screen.id === screenId);
-  });
+async function startScanner(readerId,scanMode){
+  if(scanner||scannerStarting)return;const targetReaderId=readerId||"reader",targetMode=scanMode||currentMode,reader=document.getElementById(targetReaderId);if(!reader){alert("カメラ表示エリアが見つかりませんでした。ページを再読み込みしてください。");return}
+  const availableWidth=reader.clientWidth||reader.parentElement.clientWidth||window.innerWidth,qrWidth=Math.max(180,Math.min(280,Math.floor(availableWidth*.82))),qrHeight=Math.max(100,Math.floor(qrWidth*.5));let scanHandled=false;scannerStarting=true;reader.innerHTML="";
+  try{const activeScanner=new Html5Qrcode(targetReaderId);scanner=activeScanner;await activeScanner.start({facingMode:{ideal:"environment"}},{fps:15,qrbox:{width:qrWidth,height:qrHeight}},async function(decodedText){if(scanHandled)return;scanHandled=true;try{await activeScanner.stop()}catch(e){}try{activeScanner.clear()}catch(e){}if(scanner===activeScanner)scanner=null;reader.innerHTML="";if(targetMode==="sale"){currentSaleBarcode=decodedText;loadSaleProduct(decodedText)}else{document.getElementById("barcode").value=decodedText;updateBarcodePreviewMeta()}},function(){})}
+  catch(err){console.error("カメラ起動エラー:",err);if(scanner){try{scanner.clear()}catch(e){}}scanner=null;reader.innerHTML="";alert("カメラを起動できませんでした。ページを再読み込みして、もう一度お試しください。")}finally{scannerStarting=false}
 }
 
-async function stopScanner() {
-  const activeScanner = scanner;
-  scanner = null;
-  scannerStarting = false;
-  if (!activeScanner) return;
-  try { await activeScanner.stop(); } catch (error) {}
-  try { activeScanner.clear(); } catch (error) {}
+function loadSaleProduct(barcode){const info=document.getElementById("saleInfo"),btn=document.getElementById("sellButton"),quantityPanel=document.getElementById("saleQuantityPanel");info.style.display="block";info.textContent="商品情報を確認中...";btn.style.display="none";quantityPanel.style.display="none";google.script.run.withSuccessHandler(function(p){if(!p.found){info.textContent="❌ このバーコードの商品が見つかりません";currentSaleBarcode="";return}info.innerHTML="<strong>"+escapeHtml((p.brand||"")+" "+(p.productName||""))+"</strong><br>カラー："+escapeHtml(p.color||"-")+"　サイズ："+escapeHtml(p.size||"-")+"<br>販売価格：¥"+Number(p.price||0).toLocaleString()+"<br>現在庫：<strong>"+p.stock+"</strong>";currentSaleStock=Number(p.stock)||0;document.getElementById("saleQuantity").max=currentSaleStock;document.getElementById("saleQuantity").value=1;if(currentSaleStock>0){quantityPanel.style.display="block";btn.style.display="block"}else info.innerHTML+="<br><strong>⚠️ 在庫0のため販売できません</strong>"}).withFailureHandler(function(e){info.textContent="❌ "+e.message}).getProductForSale(barcode)}
+function escapeHtml(value){const div=document.createElement("div");div.textContent=String(value==null?"":value);return div.innerHTML}
+function normalizeSaleQuantity(){const input=document.getElementById("saleQuantity"),value=Math.floor(Number(input.value)||1);input.value=Math.max(1,Math.min(currentSaleStock||1,value));return Number(input.value)}
+function changeSaleQuantity(delta){const input=document.getElementById("saleQuantity");input.value=(Number(input.value)||1)+delta;normalizeSaleQuantity()}
+function confirmSale(){if(!currentSaleBarcode)return;const quantity=normalizeSaleQuantity();if(quantity>currentSaleStock){alert("在庫数以内の数量を指定してください");return}const btn=document.getElementById("sellButton");btn.disabled=true;btn.textContent="処理中...";google.script.run.withSuccessHandler(function(r){btn.disabled=false;btn.textContent="販売を確定する";if(!r.success){if(r.reason==="out_of_stock")alert("在庫が不足しています。現在庫は"+Number(r.stock||0)+"点です。");else if(r.reason==="invalid_quantity")alert("販売数量を確認してください");else alert("商品が見つかりませんでした");return}document.getElementById("saleInfo").innerHTML="✅ <strong>販売登録しました！</strong><br>"+escapeHtml((r.brand||"")+" "+(r.productName||""))+"<br>販売数量：<strong>"+r.quantity+"</strong><br>販売後在庫：<strong>"+r.newStock+"</strong>";document.getElementById("saleQuantityPanel").style.display="none";btn.style.display="none";currentSaleBarcode="";if(navigator.vibrate)navigator.vibrate(80)}).withFailureHandler(function(e){btn.disabled=false;btn.textContent="販売を確定する";alert("販売処理エラー："+e.message)}).sellProductByBarcode(currentSaleBarcode,quantity)}
+
+function getBarcodeMeta(){return{productNumber:document.getElementById("productNumber").value.trim()||"-",size:document.getElementById("size").value.trim()||"-",color:document.getElementById("color").value.trim()||"-"}}
+function updateBarcodePreviewMeta(){const m=getBarcodeMeta();document.getElementById("previewProductNumber").textContent="品番: "+m.productNumber;document.getElementById("previewSize").textContent="サイズ: "+m.size;document.getElementById("previewColor").textContent="カラー: "+m.color}
+function renderBarcodePreview(code){updateBarcodePreviewMeta();JsBarcode("#previewBarcode",code,{format:"EAN13",displayValue:true,height:48,width:1.5,margin:10,fontSize:13,background:"#ffffff",lineColor:"#000000"});document.getElementById("barcodePreview").style.display="block"}
+
+function generateBarcodeNow(){
+  const btn=document.getElementById("generateBarcodeButton"),message=document.getElementById("message");
+  const productNumber=document.getElementById("productNumber").value.trim(),size=document.getElementById("size").value.trim(),color=document.getElementById("color").value.trim();
+  if(!productNumber||!size||!color){alert("バーコードラベルを作る前に「商品番号・サイズ・カラー」を入力してください。");return}
+  btn.disabled=true;btn.textContent="生成中...";message.textContent="";
+  google.script.run.withSuccessHandler(function(code){document.getElementById("barcode").value=code;renderBarcodePreview(code);document.getElementById("autoBarcodeNotice").style.display="block";btn.disabled=false;btn.textContent="🔄 別のバーコードを生成";message.textContent="✅ 商品情報入りのバーコードを生成しました"}).withFailureHandler(function(error){btn.disabled=false;btn.textContent="🏷️ 商品情報からバーコードを生成";message.textContent="❌ バーコード生成エラー："+error.message}).generateUniqueEan13Barcode()
+}
+function validateEan13(value){const code=String(value||"").trim();if(!/^\d{13}$/.test(code))return{valid:false,message:"バーコード番号は13桁の数字で入力してください。"};let sum=0;for(let i=0;i<12;i++)sum+=Number(code[i])*(i%2===0?1:3);const expected=(10-(sum%10))%10;if(Number(code[12])!==expected)return{valid:false,message:"EAN-13のチェックデジットが正しくありません。番号を確認してください。"};return{valid:true,code:code}}
+function canvasToPngBlob(canvas){const dataUrl=canvas.toDataURL("image/png"),binary=atob(dataUrl.split(",")[1]),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:"image/png"})}
+function buildBarcodeLabelCanvas(code){
+  const barcodeCanvas=document.createElement("canvas");JsBarcode(barcodeCanvas,code,{format:"EAN13",displayValue:true,width:5,height:300,margin:60,fontSize:42,textMargin:16,fontOptions:"bold",background:"#ffffff",lineColor:"#000000"});
+  const meta=getBarcodeMeta(),padding=70,lineHeight=58,metaHeight=lineHeight*3+34,width=Math.max(barcodeCanvas.width,1200),height=padding+metaHeight+barcodeCanvas.height+padding;
+  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.font="bold 42px -apple-system, BlinkMacSystemFont, sans-serif";ctx.textBaseline="top";ctx.fillText("品番: "+meta.productNumber,padding,padding);ctx.fillText("サイズ: "+meta.size,padding,padding+lineHeight);ctx.fillText("カラー: "+meta.color,padding,padding+lineHeight*2);const x=Math.floor((width-barcodeCanvas.width)/2),y=padding+metaHeight;ctx.drawImage(barcodeCanvas,x,y);return canvas
+}
+async function saveBarcodeImage(){
+  const button=document.getElementById("saveBarcodeButton"),status=document.getElementById("barcodeSaveMessage"),validation=validateEan13(document.getElementById("barcode").value);if(!validation.valid){status.textContent="⚠️ "+validation.message;document.getElementById("barcode").focus();return}
+  const meta=getBarcodeMeta();if(meta.productNumber==="-"||meta.size==="-"||meta.color==="-"){status.textContent="⚠️ 品番・サイズ・カラーを入力してください。";return}
+  button.disabled=true;button.textContent="画像を作成中...";status.textContent="";
+  try{const canvas=buildBarcodeLabelCanvas(validation.code),blob=canvasToPngBlob(canvas),fileName="barcode-"+validation.code+".png",file=new File([blob],fileName,{type:"image/png"});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"バーコード "+validation.code});status.textContent="✅ ラベル画像の共有先を選択しました。"}else{const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000);status.textContent="✅ ラベルPNG画像を保存しました。"}}
+  catch(error){if(error&&error.name==="AbortError")status.textContent="共有をキャンセルしました。";else status.textContent="❌ 画像を保存できませんでした："+(error.message||error)}finally{button.disabled=false;button.textContent="📱 ラベル画像を保存・共有"}
 }
 
-function showHome() {
-  stopScanner();
-  currentMode = "home";
-  resetSaleSelection();
-  document.getElementById("generatedLabel").style.display = "none";
-  window.top.location.href = SCANNER_HOME_URL;
+function registerProduct(){
+  const button=document.getElementById("registerButton"),message=document.getElementById("message"),data={productNumber:document.getElementById("productNumber").value,barcode:document.getElementById("barcode").value,generateBarcode:false,productName:document.getElementById("productName").value,type:document.getElementById("type").value,brand:document.getElementById("brand").value,color:document.getElementById("color").value,size:document.getElementById("size").value,maker:document.getElementById("maker").value,arrivalDate:document.getElementById("arrivalDate").value,cost:document.getElementById("cost").value,price:document.getElementById("price").value,stock:document.getElementById("stock").value,instagram:document.getElementById("instagram").value};
+  if(!data.productName){alert("商品名を入力してください");return}if(!data.barcode.trim()){alert("商品情報を入力したあと、先にバーコードを生成してください。");document.getElementById("generateBarcodeButton").scrollIntoView({behavior:"smooth",block:"center"});return}
+  button.disabled=true;button.textContent="登録中...";message.textContent="";
+  google.script.run.withSuccessHandler(function(result){message.textContent="✅ "+(result.message||result);button.disabled=false;button.textContent="商品を登録する";if(result&&result.barcode){document.getElementById("barcode").value=result.barcode;showProductLabel(result);return}setTimeout(function(){window.location.href=SCANNER_HOME_URL},800)}).withFailureHandler(function(error){message.textContent="❌ 登録できませんでした："+error.message;button.disabled=false;button.textContent="商品を登録する"}).registerProduct(data)
 }
+function showProductLabel(result){const d=result.product||{},taxIn=Number(d.price||0),taxOut=Math.round(taxIn/1.1);document.getElementById("labelBrand").textContent=d.brand||"cocokaruco";document.getElementById("labelMeta").innerHTML="品番: "+escapeHtml(d.productNumber||"-")+"<br>サイズ: "+escapeHtml(d.size||"-")+"<br>カラー: "+escapeHtml(d.color||"-");document.getElementById("labelPrice").textContent="税込 ¥"+taxIn.toLocaleString()+"（税抜 ¥"+taxOut.toLocaleString()+"）";JsBarcode("#labelBarcode",result.barcode,{format:"EAN13",displayValue:true,height:48,width:1.5,margin:10,fontSize:13,background:"#ffffff",lineColor:"#000000"});document.getElementById("generatedLabel").style.display="block";document.getElementById("generatedLabel").scrollIntoView({behavior:"smooth"})}
 
-function showRegistrationMethods() {
-  stopScanner();
-  window.top.location.href = REGISTRATION_METHOD_URL;
-}
-
-function openRegister() {
-  currentMode = "register";
-  showScreen("registerFields");
-}
-
-function openSaleAndStart(event) {
-  // Apps Scriptはiframe内で動くため、iPhone Safariではカメラが拒否されることがある。
-  // カメラはトップレベルのGitHub Pagesで起動し、読取値だけをこの画面へ戻す。
-  window.top.location.href = "https://ryota-ivy.github.io/cocokaruco-scanner/?mode=sale&autostart=1";
-}
-
-function resetSaleSelection() {
-  document.getElementById("saleInfo").style.display = "none";
-  document.getElementById("saleQuantityPanel").style.display = "none";
-  document.getElementById("sellButton").style.display = "none";
-  currentSaleBarcode = "";
-  currentSaleStock = 0;
-  document.getElementById("saleQuantity").value = 1;
-}
-
-async function startScanner(readerId, scanMode) {
-  if (scanner || scannerStarting) return;
-
-  const targetReaderId = readerId || "reader";
-  const targetMode = scanMode || currentMode;
-  const reader = document.getElementById(targetReaderId);
-  if (!reader) {
-    alert("カメラ表示エリアが見つかりませんでした。ページを再読み込みしてください。");
-    return;
-  }
-
-  // 販売モードは内側に余白があり、固定300pxの読み取り枠だと
-  // iPhoneで表示領域を超えて起動に失敗するため、実際の横幅に合わせる。
-  const availableWidth = reader.clientWidth || reader.parentElement.clientWidth || window.innerWidth;
-  const qrWidth = Math.max(180, Math.min(280, Math.floor(availableWidth * 0.82)));
-  const qrHeight = Math.max(100, Math.floor(qrWidth * 0.5));
-  let scanHandled = false;
-
-  scannerStarting = true;
-  reader.innerHTML = "";
-
-  try {
-    const activeScanner = new Html5Qrcode(targetReaderId);
-    scanner = activeScanner;
-
-    await activeScanner.start(
-      { facingMode: { ideal: "environment" } },
-      {
-        fps: 15,
-        qrbox: { width: qrWidth, height: qrHeight }
-      },
-      async function(decodedText) {
-        if (scanHandled) return;
-        scanHandled = true;
-
-        try {
-          await activeScanner.stop();
-        } catch (stopError) {
-          console.warn("カメラ停止エラー:", stopError);
-        }
-
-        try {
-          activeScanner.clear();
-        } catch (clearError) {
-          console.warn("カメラ表示のクリアエラー:", clearError);
-        }
-
-        if (scanner === activeScanner) scanner = null;
-        reader.innerHTML = "";
-
-        if (targetMode === "sale") {
-          currentSaleBarcode = decodedText;
-          loadSaleProduct(decodedText);
-        } else {
-          document.getElementById("barcode").value = decodedText;
-        }
-      },
-      function() {
-        // 読み取り待機中
-      }
-    );
-  } catch (err) {
-    console.error("カメラ起動エラー:", err);
-    if (scanner) {
-      try { scanner.clear(); } catch (clearError) {}
-    }
-    scanner = null;
-    reader.innerHTML = "";
-    alert("カメラを起動できませんでした。ページを再読み込みして、もう一度お試しください。");
-  } finally {
-    scannerStarting = false;
-  }
-}
-
-
-function loadSaleProduct(barcode) {
-  const info = document.getElementById("saleInfo");
-  const btn = document.getElementById("sellButton");
-  const quantityPanel = document.getElementById("saleQuantityPanel");
-  info.style.display = "block";
-  info.textContent = "商品情報を確認中...";
-  btn.style.display = "none";
-  quantityPanel.style.display = "none";
-  google.script.run
-    .withSuccessHandler(function(p) {
-      if (!p.found) {
-        info.textContent = "❌ このバーコードの商品が見つかりません";
-        currentSaleBarcode = "";
-        return;
-      }
-      info.innerHTML =
-        "<strong>" + escapeHtml((p.brand || "") + " " + (p.productName || "")) + "</strong><br>" +
-        "カラー：" + escapeHtml(p.color || "-") + "　サイズ：" + escapeHtml(p.size || "-") + "<br>" +
-        "販売価格：¥" + Number(p.price || 0).toLocaleString() + "<br>" +
-        "現在庫：<strong>" + p.stock + "</strong>";
-      currentSaleStock = Number(p.stock) || 0;
-      document.getElementById("saleQuantity").max = currentSaleStock;
-      document.getElementById("saleQuantity").value = 1;
-      if (currentSaleStock > 0) {
-        quantityPanel.style.display = "block";
-        btn.style.display = "block";
-      }
-      else info.innerHTML += "<br><strong>⚠️ 在庫0のため販売できません</strong>";
-    })
-    .withFailureHandler(function(e) { info.textContent = "❌ " + e.message; })
-    .getProductForSale(barcode);
-}
-
-function escapeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value == null ? "" : value);
-  return div.innerHTML;
-}
-
-function normalizeSaleQuantity() {
-  const input = document.getElementById("saleQuantity");
-  const value = Math.floor(Number(input.value) || 1);
-  input.value = Math.max(1, Math.min(currentSaleStock || 1, value));
-  return Number(input.value);
-}
-
-function changeSaleQuantity(delta) {
-  const input = document.getElementById("saleQuantity");
-  input.value = (Number(input.value) || 1) + delta;
-  normalizeSaleQuantity();
-}
-
-function confirmSale() {
-  if (!currentSaleBarcode) return;
-  const quantity = normalizeSaleQuantity();
-  if (quantity > currentSaleStock) {
-    alert("在庫数以内の数量を指定してください");
-    return;
-  }
-  const btn = document.getElementById("sellButton");
-  btn.disabled = true;
-  btn.textContent = "処理中...";
-  google.script.run
-    .withSuccessHandler(function(r) {
-      btn.disabled = false;
-      btn.textContent = "販売を確定する";
-      if (!r.success) {
-        if (r.reason === "out_of_stock") alert("在庫が不足しています。現在庫は" + Number(r.stock || 0) + "点です。");
-        else if (r.reason === "invalid_quantity") alert("販売数量を確認してください");
-        else alert("商品が見つかりませんでした");
-        return;
-      }
-      document.getElementById("saleInfo").innerHTML =
-        "✅ <strong>販売登録しました！</strong><br>" +
-        escapeHtml((r.brand || "") + " " + (r.productName || "")) + "<br>" +
-        "販売数量：<strong>" + r.quantity + "</strong><br>" +
-        "販売後在庫：<strong>" + r.newStock + "</strong>";
-      document.getElementById("saleQuantityPanel").style.display = "none";
-      btn.style.display = "none";
-      currentSaleBarcode = "";
-      if (navigator.vibrate) navigator.vibrate(80);
-    })
-    .withFailureHandler(function(e) {
-      btn.disabled = false;
-      btn.textContent = "販売を確定する";
-      alert("販売処理エラー：" + e.message);
-    })
-    .sellProductByBarcode(currentSaleBarcode, quantity);
-}
-
-function generateBarcodeNow() {
-  const btn = document.getElementById("generateBarcodeButton");
-  const message = document.getElementById("message");
-  btn.disabled = true;
-  btn.textContent = "生成中...";
-  message.textContent = "";
-
-  google.script.run
-    .withSuccessHandler(function(code) {
-      document.getElementById("barcode").value = code;
-      JsBarcode("#previewBarcode", code, {
-        format: "EAN13",
-        displayValue: true,
-        height: 48,
-        width: 1.5,
-        margin: 10,
-        fontSize: 13,
-        background: "#ffffff",
-        lineColor: "#000000"
-      });
-      document.getElementById("barcodePreview").style.display = "block";
-      document.getElementById("autoBarcodeNotice").style.display = "block";
-      btn.disabled = false;
-      btn.textContent = "🔄 別のバーコードを生成";
-      message.textContent = "✅ 未使用のバーコードを生成しました";
-    })
-    .withFailureHandler(function(error) {
-      btn.disabled = false;
-      btn.textContent = "🏷️ 新しいバーコードを生成";
-      message.textContent = "❌ バーコード生成エラー：" + error.message;
-    })
-    .generateUniqueEan13Barcode();
-}
-
-function validateEan13(value) {
-  const code = String(value || "").trim();
-  if (!/^\d{13}$/.test(code)) {
-    return { valid: false, message: "バーコード番号は13桁の数字で入力してください。" };
-  }
-
-  let sum = 0;
-  for (let i = 0; i < 12; i++) {
-    sum += Number(code[i]) * (i % 2 === 0 ? 1 : 3);
-  }
-  const expectedCheckDigit = (10 - (sum % 10)) % 10;
-  if (Number(code[12]) !== expectedCheckDigit) {
-    return { valid: false, message: "EAN-13のチェックデジットが正しくありません。番号を確認してください。" };
-  }
-
-  return { valid: true, code: code };
-}
-
-function canvasToPngBlob(canvas) {
-  const dataUrl = canvas.toDataURL("image/png");
-  const binary = atob(dataUrl.split(",")[1]);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: "image/png" });
-}
-
-async function saveBarcodeImage() {
-  const button = document.getElementById("saveBarcodeButton");
-  const status = document.getElementById("barcodeSaveMessage");
-  const validation = validateEan13(document.getElementById("barcode").value);
-
-  if (!validation.valid) {
-    status.textContent = "⚠️ " + validation.message;
-    document.getElementById("barcode").focus();
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "画像を作成中...";
-  status.textContent = "";
-
-  try {
-    const canvas = document.createElement("canvas");
-    JsBarcode(canvas, validation.code, {
-      format: "EAN13",
-      displayValue: true,
-      width: 5,
-      height: 300,
-      margin: 60,
-      fontSize: 42,
-      textMargin: 16,
-      fontOptions: "bold",
-      background: "#ffffff",
-      lineColor: "#000000"
-    });
-
-    // 同期生成して、iPhone Safariの共有操作に必要なタップ状態を保つ。
-    const blob = canvasToPngBlob(canvas);
-    const fileName = "barcode-" + validation.code + ".png";
-    const file = new File([blob], fileName, { type: "image/png" });
-
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: "バーコード " + validation.code
-      });
-      status.textContent = "✅ 共有先を選択しました。";
-    } else {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-      status.textContent = "✅ PNG画像を保存しました。";
-    }
-  } catch (error) {
-    if (error && error.name === "AbortError") {
-      status.textContent = "共有をキャンセルしました。";
-    } else {
-      status.textContent = "❌ 画像を保存できませんでした：" + (error.message || error);
-    }
-  } finally {
-    button.disabled = false;
-    button.textContent = "📱 バーコード画像を保存・共有";
-  }
-}
-
-function registerProduct() {
-
-  const button = document.getElementById("registerButton");
-  const message = document.getElementById("message");
-
-  const data = {
-    productNumber: document.getElementById("productNumber").value,
-    barcode: document.getElementById("barcode").value,
-    generateBarcode: document.getElementById("barcode").value.trim() === "",
-    productName: document.getElementById("productName").value,
-    type: document.getElementById("type").value,
-    brand: document.getElementById("brand").value,
-    color: document.getElementById("color").value,
-    size: document.getElementById("size").value,
-    maker: document.getElementById("maker").value,
-    arrivalDate: document.getElementById("arrivalDate").value,
-    cost: document.getElementById("cost").value,
-    price: document.getElementById("price").value,
-    stock: document.getElementById("stock").value,
-    instagram: document.getElementById("instagram").value
-  };
-
-  if (!data.productName) {
-    alert("商品名を入力してください");
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "登録中...";
-  message.textContent = "";
-
-  google.script.run
-
- .withSuccessHandler(function(result) {
-
-  message.textContent = "✅ " + (result.message || result);
-  button.disabled = false;
-  button.textContent = "商品を登録する";
-
-  if (result && result.barcode) {
-    document.getElementById("barcode").value = result.barcode;
-    showProductLabel(result);
-    return;
-  }
-
-  // 登録完了後、次の商品スキャン画面へ自動移動
-  setTimeout(function() {
-    window.location.href =
-      "https://ryota-ivy.github.io/cocokaruco-scanner/";
-  }, 800);
-
-})
-
-    .withFailureHandler(function(error) {
-
-      message.textContent = "❌ 登録できませんでした：" + error.message;
-
-      button.disabled = false;
-      button.textContent = "商品を登録する";
-
-    })
-
-    .registerProduct(data);
-}
-
-function showProductLabel(result) {
-  const d = result.product || {};
-  const taxIn = Number(d.price || 0);
-  const taxOut = Math.round(taxIn / 1.1);
-  document.getElementById("labelBrand").textContent = d.brand || "cocokaruco";
-  document.getElementById("labelMeta").textContent =
-    "品番：" + (d.productNumber || "-") +
-    "　カラー：" + (d.color || "-") +
-    "　サイズ：" + (d.size || "-");
-  document.getElementById("labelPrice").textContent =
-    "税込 ¥" + taxIn.toLocaleString() + "（税抜 ¥" + taxOut.toLocaleString() + "）";
-  JsBarcode("#labelBarcode", result.barcode, {
-    format: "EAN13", displayValue: true, height: 48, width: 1.5,
-    margin: 10, fontSize: 13, background: "#ffffff", lineColor: "#000000"
-  });
-  document.getElementById("generatedLabel").style.display = "block";
-  document.getElementById("generatedLabel").scrollIntoView({behavior:"smooth"});
-}
-
-// 登録済みバーコードをチェック
-window.addEventListener("DOMContentLoaded", function () {
-
-  const barcodeInput = document.getElementById("barcode");
-  const params = new URLSearchParams(window.location.search);
-  const isNewBarcode = params.get("newBarcode") === "1";
-  const requestedMode = params.get("mode");
-  const shouldAutoStart = params.get("autostart") === "1";
-  const saleBarcode = document.getElementById("initialSaleBarcode").value.trim();
-
-  if (barcodeInput.value.trim() || isNewBarcode) {
-    openRegister();
-  } else if (requestedMode === "sale") {
-    currentMode = "sale";
-    showScreen("salePanel");
-    if (saleBarcode) {
-      currentSaleBarcode = saleBarcode;
-      loadSaleProduct(saleBarcode);
-    } else if (shouldAutoStart) {
-      window.top.location.href = "https://ryota-ivy.github.io/cocokaruco-scanner/?mode=sale&autostart=1";
-    }
-  } else {
-    // Apps Script側に重複した「商品登録 / 商品販売」メニューを出さず、
-    // 操作の起点はGitHub Pagesのトップ画面に一本化する。
-    window.top.location.href = SCANNER_HOME_URL;
-    return;
-  }
-
-  if (isNewBarcode && !barcodeInput.value.trim()) {
-    barcodeInput.placeholder = "下のボタンで自動生成できます";
-    document.getElementById("autoBarcodeNotice").style.display = "block";
-  }
-
-  const barcode = barcodeInput.value.trim();
-  if (!barcode) return;
-
-  google.script.run
-    .withSuccessHandler(function(info) {
-
-      if (!info.found) {
-        return;
-      }
-
-     currentDuplicateBarcode = barcode;
-
-document.getElementById("duplicateInfo").innerHTML =
-  "商品名：" + info.productName + "<br>" +
-  "ブランド：" + info.brand + "<br>" +
-  "カラー：" + info.color + "<br>" +
-  "サイズ：" + info.size + "<br>" +
-  "現在庫：" + info.stock + "<br>" +
-  "登録件数：" + info.count + "件";
-
-document.getElementById("duplicateModal").style.display = "flex";
-    })
-    .withFailureHandler(function(error) {
-      console.error("バーコード確認エラー:", error);
-    })
-    .checkBarcode(barcode);
-
+window.addEventListener("DOMContentLoaded",function(){
+  const barcodeInput=document.getElementById("barcode"),params=new URLSearchParams(window.location.search),isNewBarcode=params.get("newBarcode")==="1",requestedMode=params.get("mode"),shouldAutoStart=params.get("autostart")==="1",saleBarcode=document.getElementById("initialSaleBarcode").value.trim();
+  ["productNumber","size","color"].forEach(function(id){document.getElementById(id).addEventListener("input",function(){if(document.getElementById("barcodePreview").style.display!=="none")updateBarcodePreviewMeta()})});
+  if(barcodeInput.value.trim()||isNewBarcode){openRegister()}else if(requestedMode==="sale"){currentMode="sale";showScreen("salePanel");if(saleBarcode){currentSaleBarcode=saleBarcode;loadSaleProduct(saleBarcode)}else if(shouldAutoStart){window.top.location.href=SCANNER_HOME_URL+"?mode=sale&autostart=1"}}else{window.top.location.href=SCANNER_HOME_URL;return}
+  if(isNewBarcode&&!barcodeInput.value.trim()){barcodeInput.placeholder="商品情報入力後に下のボタンで生成";document.getElementById("autoBarcodeNotice").style.display="block"}
+  const barcode=barcodeInput.value.trim();if(!barcode)return;renderBarcodePreview(barcode);
+  google.script.run.withSuccessHandler(function(info){if(!info.found)return;currentDuplicateBarcode=barcode;document.getElementById("duplicateInfo").innerHTML="商品名："+info.productName+"<br>ブランド："+info.brand+"<br>カラー："+info.color+"<br>サイズ："+info.size+"<br>現在庫："+info.stock+"<br>登録件数："+info.count+"件";document.getElementById("duplicateModal").style.display="flex"}).withFailureHandler(function(error){console.error("バーコード確認エラー:",error)}).checkBarcode(barcode)
 });
-
-let currentDuplicateBarcode = "";
-
-function addExistingStock() {
-  google.script.run
-    .withSuccessHandler(function(result) {
-
-      if (result.success) {
-        alert("在庫を＋1しました！ 現在庫：" + result.newStock);
-
-        window.location.href =
-          "https://ryota-ivy.github.io/cocokaruco-scanner/";
-      } else {
-        alert("在庫更新に失敗しました");
-      }
-
-    })
-    .withFailureHandler(function(error) {
-      alert("在庫更新エラー：" + error.message);
-    })
-    .addStockByBarcode(currentDuplicateBarcode);
-}
-
-
-function continueAsNew() {
-  document.getElementById("duplicateModal").style.display = "none";
-}
-
-
-function cancelDuplicate() {
-  window.location.href =
-    "https://ryota-ivy.github.io/cocokaruco-scanner/";
-}
-
+let currentDuplicateBarcode="";
+function addExistingStock(){google.script.run.withSuccessHandler(function(result){if(result.success){alert("在庫を＋1しました！ 現在庫："+result.newStock);window.location.href=SCANNER_HOME_URL}else alert("在庫更新に失敗しました")}).withFailureHandler(function(error){alert("在庫更新エラー："+error.message)}).addStockByBarcode(currentDuplicateBarcode)}
+function continueAsNew(){document.getElementById("duplicateModal").style.display="none"}
+function cancelDuplicate(){window.location.href=SCANNER_HOME_URL}
 </script>
 
-<div id="duplicateModal" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.45);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-">
-  <div style="
-    width:90%;
-    max-width:420px;
-    background:white;
-    border-radius:18px;
-    padding:24px;
-    box-sizing:border-box;
-  ">
-    <h3 style="margin-top:0;">このバーコードは登録済みです</h3>
-
-    <div id="duplicateInfo" style="margin-bottom:20px; line-height:1.7;"></div>
-
-    <button onclick="addExistingStock()" style="margin-bottom:10px;">
-      在庫を＋1する
-    </button>
-
-    <button onclick="continueAsNew()" style="margin-bottom:10px;">
-      別商品として新規登録
-    </button>
-
-    <button onclick="cancelDuplicate()" style="background:#777;">
-      キャンセル
-    </button>
-  </div>
-</div>
-
-
+<div id="duplicateModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;"><div style="width:90%;max-width:420px;background:white;border-radius:18px;padding:24px;box-sizing:border-box;"><h3 style="margin-top:0;">このバーコードは登録済みです</h3><div id="duplicateInfo" style="margin-bottom:20px;line-height:1.7;"></div><button onclick="addExistingStock()" style="margin-bottom:10px;">在庫を＋1する</button><button onclick="continueAsNew()" style="margin-bottom:10px;">別商品として新規登録</button><button onclick="cancelDuplicate()" style="background:#777;">キャンセル</button></div></div>
 </body>
 </html>
