@@ -20,7 +20,7 @@
     .screen{display:none}.screen.active{display:block}.home-actions{display:grid;gap:14px}.home-button{min-height:104px;margin-top:0;text-align:left;padding:20px}.home-button span{display:block;font-size:14px;font-weight:500;margin-top:8px;opacity:.78}.home-button.sale{background:#0b6bcb;color:#fff}
     .back-button{background:transparent;color:#333;border:1px solid #ccc;margin-top:0;margin-bottom:16px}.quantity-row{display:grid;grid-template-columns:48px 1fr 48px;gap:10px;align-items:center;margin-top:14px}.quantity-row button{margin:0;padding:12px 0}.quantity-row input{text-align:center}
     .barcode-section{margin-top:26px;padding:18px;background:#f7f7f7;border-radius:14px;border:1px solid #e5e5e5}.barcode-section h3{margin:0 0 4px;font-size:18px}.barcode-section .hint{font-size:14px;color:#666;line-height:1.5;margin-bottom:10px}
-    #barcodePreview{display:none;background:#fff;padding:14px;margin-top:12px;border-radius:10px;text-align:left}.preview-meta{font-size:15px;line-height:1.65;font-weight:600;margin-bottom:8px}.preview-meta span{display:block}#previewBarcode{display:block;max-width:100%;margin:0 auto;shape-rendering:crispEdges}
+    #barcodePreview{display:none;background:#fff;padding:14px;margin-top:12px;border-radius:10px;text-align:left}.preview-meta{font-size:15px;line-height:1.65;font-weight:600;margin-bottom:8px}.preview-meta span{display:block}.price-line{min-height:1.65em}#previewBarcode{display:block;max-width:100%;margin:0 auto;shape-rendering:crispEdges}
     @media(max-width:520px){body{padding:12px}.card{padding:18px;border-radius:14px}button{min-height:52px}}
     @media print{body *{visibility:hidden}#generatedLabel,#generatedLabel *{visibility:visible}#generatedLabel{display:block!important;position:absolute;left:0;top:0;width:52mm;border:0!important;margin:0;padding:2mm;box-sizing:border-box}#generatedLabel button{display:none}#labelBarcode{shape-rendering:crispEdges;max-width:48mm!important}}
   </style>
@@ -63,11 +63,11 @@
 
     <div class="barcode-section">
       <h3>🏷️ バーコード作成</h3>
-      <div class="hint">商品情報を入力したあとに生成します。ラベル画像には「品番・サイズ・カラー」を一緒に入れます。</div>
+      <div class="hint">商品情報を入力したあとに生成します。ラベル画像には「品番・サイズ・カラー・販売価格」を一緒に入れます。</div>
       <label>バーコード番号</label><input id="barcode" inputmode="text" value="<?= barcode ?>">
       <button type="button" id="generateBarcodeButton" onclick="generateBarcodeNow()" style="background:#fff;color:#111;border:2px solid #111;margin-top:10px;">🏷️ 商品情報からバーコードを生成</button>
       <div id="barcodePreview">
-        <div class="preview-meta"><span id="previewProductNumber"></span><span id="previewSize"></span><span id="previewColor"></span></div>
+        <div class="preview-meta"><span id="previewProductNumber"></span><span id="previewSize"></span><span id="previewColor"></span><span id="previewPrice" class="price-line"></span></div>
         <svg id="previewBarcode"></svg>
       </div>
       <button type="button" id="saveBarcodeButton" class="barcode-save" onclick="saveBarcodeImage()">📱 ラベル画像を保存・共有</button>
@@ -80,7 +80,7 @@
 
   <div id="generatedLabel" style="display:none;margin-top:24px;padding:16px;border:2px solid #111;border-radius:12px;background:#fff;">
     <div id="labelBrand" style="font-weight:700;font-size:18px;"></div><div id="labelMeta" style="font-size:14px;line-height:1.6;margin-top:6px;"></div>
-    <svg id="labelBarcode" style="display:block;max-width:100%;margin:8px auto;"></svg><div id="labelPrice" style="font-weight:700;font-size:18px;margin-top:6px;"></div><button type="button" onclick="window.print()">🖨️ ラベルを印刷</button>
+    <svg id="labelBarcode" style="display:block;max-width:100%;margin:8px auto;"></svg><button type="button" onclick="window.print()">🖨️ ラベルを印刷</button>
   </div>
 </div>
 
@@ -109,8 +109,9 @@ function normalizeSaleQuantity(){const input=document.getElementById("saleQuanti
 function changeSaleQuantity(delta){const input=document.getElementById("saleQuantity");input.value=(Number(input.value)||1)+delta;normalizeSaleQuantity()}
 function confirmSale(){if(!currentSaleBarcode)return;const quantity=normalizeSaleQuantity();if(quantity>currentSaleStock){alert("在庫数以内の数量を指定してください");return}const btn=document.getElementById("sellButton");btn.disabled=true;btn.textContent="処理中...";google.script.run.withSuccessHandler(function(r){btn.disabled=false;btn.textContent="販売を確定する";if(!r.success){if(r.reason==="out_of_stock")alert("在庫が不足しています。現在庫は"+Number(r.stock||0)+"点です。");else if(r.reason==="invalid_quantity")alert("販売数量を確認してください");else alert("商品が見つかりませんでした");return}document.getElementById("saleInfo").innerHTML="✅ <strong>販売登録しました！</strong><br>"+escapeHtml((r.brand||"")+" "+(r.productName||""))+"<br>販売数量：<strong>"+r.quantity+"</strong><br>販売後在庫：<strong>"+r.newStock+"</strong>";document.getElementById("saleQuantityPanel").style.display="none";btn.style.display="none";currentSaleBarcode="";if(navigator.vibrate)navigator.vibrate(80)}).withFailureHandler(function(e){btn.disabled=false;btn.textContent="販売を確定する";alert("販売処理エラー："+e.message)}).sellProductByBarcode(currentSaleBarcode,quantity)}
 
-function getBarcodeMeta(){return{productNumber:document.getElementById("productNumber").value.trim()||"-",size:document.getElementById("size").value.trim()||"-",color:document.getElementById("color").value.trim()||"-"}}
-function updateBarcodePreviewMeta(){const m=getBarcodeMeta();document.getElementById("previewProductNumber").textContent="品番: "+m.productNumber;document.getElementById("previewSize").textContent="サイズ: "+m.size;document.getElementById("previewColor").textContent="カラー: "+m.color}
+function formatLabelPrice(value){const raw=String(value==null?"":value).trim().replace(/,/g,"");if(raw==="")return"";const amount=Number(raw);return Number.isFinite(amount)?"￥"+amount.toLocaleString("ja-JP"):""}
+function getBarcodeMeta(){return{productNumber:document.getElementById("productNumber").value.trim()||"-",size:document.getElementById("size").value.trim()||"-",color:document.getElementById("color").value.trim()||"-",price:formatLabelPrice(document.getElementById("price").value)}}
+function updateBarcodePreviewMeta(){const m=getBarcodeMeta();document.getElementById("previewProductNumber").textContent="品番: "+m.productNumber;document.getElementById("previewSize").textContent="サイズ: "+m.size;document.getElementById("previewColor").textContent="カラー: "+m.color;document.getElementById("previewPrice").textContent=m.price}
 function renderBarcodePreview(code){updateBarcodePreviewMeta();JsBarcode("#previewBarcode",code,{format:"EAN13",displayValue:true,height:48,width:1.5,margin:10,fontSize:13,background:"#ffffff",lineColor:"#000000"});document.getElementById("barcodePreview").style.display="block"}
 
 function generateBarcodeNow(){
@@ -124,8 +125,8 @@ function validateEan13(value){const code=String(value||"").trim();if(!/^\d{13}$/
 function canvasToPngBlob(canvas){const dataUrl=canvas.toDataURL("image/png"),binary=atob(dataUrl.split(",")[1]),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:"image/png"})}
 function buildBarcodeLabelCanvas(code){
   const barcodeCanvas=document.createElement("canvas");JsBarcode(barcodeCanvas,code,{format:"EAN13",displayValue:true,width:5,height:300,margin:60,fontSize:42,textMargin:16,fontOptions:"bold",background:"#ffffff",lineColor:"#000000"});
-  const meta=getBarcodeMeta(),padding=70,lineHeight=58,metaHeight=lineHeight*3+34,width=Math.max(barcodeCanvas.width,1200),height=padding+metaHeight+barcodeCanvas.height+padding;
-  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.font="bold 42px -apple-system, BlinkMacSystemFont, sans-serif";ctx.textBaseline="top";ctx.fillText("品番: "+meta.productNumber,padding,padding);ctx.fillText("サイズ: "+meta.size,padding,padding+lineHeight);ctx.fillText("カラー: "+meta.color,padding,padding+lineHeight*2);const x=Math.floor((width-barcodeCanvas.width)/2),y=padding+metaHeight;ctx.drawImage(barcodeCanvas,x,y);return canvas
+  const meta=getBarcodeMeta(),padding=70,lineHeight=58,metaHeight=lineHeight*4+34,width=Math.max(barcodeCanvas.width,1200),height=padding+metaHeight+barcodeCanvas.height+padding;
+  const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";ctx.font="bold 42px -apple-system, BlinkMacSystemFont, sans-serif";ctx.textBaseline="top";ctx.fillText("品番: "+meta.productNumber,padding,padding);ctx.fillText("サイズ: "+meta.size,padding,padding+lineHeight);ctx.fillText("カラー: "+meta.color,padding,padding+lineHeight*2);if(meta.price)ctx.fillText(meta.price,padding,padding+lineHeight*3);const x=Math.floor((width-barcodeCanvas.width)/2),y=padding+metaHeight;ctx.drawImage(barcodeCanvas,x,y);return canvas
 }
 async function saveBarcodeImage(){
   const button=document.getElementById("saveBarcodeButton"),status=document.getElementById("barcodeSaveMessage"),validation=validateEan13(document.getElementById("barcode").value);if(!validation.valid){status.textContent="⚠️ "+validation.message;document.getElementById("barcode").focus();return}
@@ -141,11 +142,11 @@ function registerProduct(){
   button.disabled=true;button.textContent="登録中...";message.textContent="";
   google.script.run.withSuccessHandler(function(result){message.textContent="✅ "+(result.message||result);button.disabled=false;button.textContent="商品を登録する";if(result&&result.barcode){document.getElementById("barcode").value=result.barcode;showProductLabel(result);return}setTimeout(function(){window.location.href=SCANNER_HOME_URL},800)}).withFailureHandler(function(error){message.textContent="❌ 登録できませんでした："+error.message;button.disabled=false;button.textContent="商品を登録する"}).registerProduct(data)
 }
-function showProductLabel(result){const d=result.product||{},taxIn=Number(d.price||0),taxOut=Math.round(taxIn/1.1);document.getElementById("labelBrand").textContent=d.brand||"cocokaruco";document.getElementById("labelMeta").innerHTML="品番: "+escapeHtml(d.productNumber||"-")+"<br>サイズ: "+escapeHtml(d.size||"-")+"<br>カラー: "+escapeHtml(d.color||"-");document.getElementById("labelPrice").textContent="税込 ¥"+taxIn.toLocaleString()+"（税抜 ¥"+taxOut.toLocaleString()+"）";JsBarcode("#labelBarcode",result.barcode,{format:"EAN13",displayValue:true,height:48,width:1.5,margin:10,fontSize:13,background:"#ffffff",lineColor:"#000000"});document.getElementById("generatedLabel").style.display="block";document.getElementById("generatedLabel").scrollIntoView({behavior:"smooth"})}
+function showProductLabel(result){const d=result.product||{},price=formatLabelPrice(d.price),priceLine=document.createElement("div");priceLine.className="price-line";priceLine.textContent=price;document.getElementById("labelBrand").textContent=d.brand||"cocokaruco";document.getElementById("labelMeta").innerHTML="品番: "+escapeHtml(d.productNumber||"-")+"<br>サイズ: "+escapeHtml(d.size||"-")+"<br>カラー: "+escapeHtml(d.color||"-");document.getElementById("labelMeta").appendChild(priceLine);JsBarcode("#labelBarcode",result.barcode,{format:"EAN13",displayValue:true,height:48,width:1.5,margin:10,fontSize:13,background:"#ffffff",lineColor:"#000000"});document.getElementById("generatedLabel").style.display="block";document.getElementById("generatedLabel").scrollIntoView({behavior:"smooth"})}
 
 window.addEventListener("DOMContentLoaded",function(){
   const barcodeInput=document.getElementById("barcode"),params=new URLSearchParams(window.location.search),isNewBarcode=params.get("newBarcode")==="1",requestedMode=params.get("mode"),shouldAutoStart=params.get("autostart")==="1",saleBarcode=document.getElementById("initialSaleBarcode").value.trim();
-  ["productNumber","size","color"].forEach(function(id){document.getElementById(id).addEventListener("input",function(){if(document.getElementById("barcodePreview").style.display!=="none")updateBarcodePreviewMeta()})});
+  ["productNumber","size","color","price"].forEach(function(id){document.getElementById(id).addEventListener("input",function(){if(document.getElementById("barcodePreview").style.display!=="none")updateBarcodePreviewMeta()})});
   if(barcodeInput.value.trim()||isNewBarcode){openRegister()}else if(requestedMode==="sale"){currentMode="sale";showScreen("salePanel");if(saleBarcode){currentSaleBarcode=saleBarcode;loadSaleProduct(saleBarcode)}else if(shouldAutoStart){window.top.location.href=SCANNER_HOME_URL+"?mode=sale&autostart=1"}}else{window.top.location.href=SCANNER_HOME_URL;return}
   if(isNewBarcode&&!barcodeInput.value.trim()){barcodeInput.placeholder="商品情報入力後に下のボタンで生成";document.getElementById("autoBarcodeNotice").style.display="block"}
   const barcode=barcodeInput.value.trim();if(!barcode)return;renderBarcodePreview(barcode);

@@ -303,7 +303,17 @@ function registerProduct(data) {
   // 登録時にフィルターが掛かっている場合も、その条件を維持して再適用。
   applyInventoryFilters_(sheet, getInventoryHeaders_(sheet));
 
-  return '登録しました！';
+  return {
+    message: '登録しました！',
+    barcode: data.barcode || '',
+    product: {
+      productNumber: data.productNumber || '',
+      brand: data.brand || '',
+      size: data.size || '',
+      color: data.color || '',
+      price: data.price || ''
+    }
+  };
 }
 
 function checkBarcode(barcode) {
